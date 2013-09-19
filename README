@@ -1,0 +1,58 @@
+Tac README
+
+How to verify engine requirements:
+ - Pathfinding: the package ro7.engine.util contains three classes: Graph, Node an AStar. The user can create a class that extends Node and create a graph with these nodes. To use AStar, he has to create a class that extends it and implement the heursitic method. All the A* pathfinding is on these three classes, except for the heuristic.
+ - Viewports: the viewport class can be used as an element to be added on the screen. Its difference to the regular UI elements is that it contains a GameSpace object, which represents the content that will be drawn on it. On each draw event, the viewport will apply the necessary transformation, draw the GameSpace and revert the transformations. To use it, the user has to create a class that extends GameSpace and implements the draw method, which receives a Graphics2D object and the min and max positions of the viewport.
+
+Map format:
+ - The map format used was almost the same as the described on the assignment. The only differences were:
+	1) Since there are no sprites been used yet, the line to defain a terrain is in the format "<code> <boolean> <boolean>", where code is a two-character identifier, the first <boolean> indicate whether the terrain is passable for units and the second one whether it is passable for projectiles
+	2) After defining the terrains, and before the START line, you have to put an END TERRAIN line
+	3) After defining the units, and before the START line, you have to put an END UNTIS line
+ - An example of valid map is:
+
+10 9
+TERRAIN
+.. TRUE TRUE
+WW FALSE FALSE
+END TERRAIN
+START
+....................
+..WWWWWW....WWWWWW..
+..WW............WW..
+..WW....WWWW....WW..
+..WW............WW..
+..WW..WWWWWWWW..WW..
+..WW............WW..
+....WWWW....WWWW....
+....................
+END
+UNITS
+aa TRUE
+bb FALSE
+END UNITS
+START
+######aaaaaaaa######
+####################
+####################
+####################
+####################
+####################
+####################
+####################
+######bbbbbbbb######
+END
+
+Game requirements:
+ - Gray squares are passable, black square are impassable. Units can not move through impassable squares
+ - Player units are showed as green circles, computer units are showed as red circles
+ - The player can pan the game window use the arrow keys and zoom in and out using the mouse scroll
+ - The player can select units left clicking them
+ - Selected units have a blue border around it
+ - The player can move selected units by clicking on the target square
+ - Units will move according to the requirements ot the target place (using A*, moving smoothly, changing directions only when in the center, without overlapping units)
+
+Known bugs:
+ - If you zoom in and zoom out some times, the viewport ends a little bit translated, probably due to round error.
+
+Approximate number of hours: 24 hours

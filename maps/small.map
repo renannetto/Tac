@@ -1,0 +1,31 @@
+10 9
+TERRAIN
+.. TRUE TRUE
+WW FALSE FALSE
+END TERRAIN
+START
+....................
+..WWWWWW....WWWWWW..
+..WW............WW..
+..WW....WWWW....WW..
+..WW............WW..
+..WW..WWWWWWWW..WW..
+..WW............WW..
+....WWWW....WWWW....
+....................
+END
+UNITS
+aa TRUE
+bb FALSE
+END UNITS
+START
+######aaaaaaaa######
+####################
+####################
+####################
+####################
+####################
+####################
+####################
+######bbbbbbbb######
+END
