@@ -17,20 +17,24 @@ public abstract class AStar {
 		this.graph = graph;
 	}
 
-	public List<Node> shortestPath(Node start, Node end) {		
-		Map<Node, PathNode> predecessor = new HashMap<Node, PathNode>();
+	public List<Node> shortestPath(Node start, Node end) {
+		Map<Node, Node> predecessor = new HashMap<Node, Node>();
 		Set<Node> visited = new HashSet<Node>();
-		
+
+		Map<Node, Float> nodesCost = new HashMap<Node, Float>();
+
 		Queue<PathNode> queue = new PriorityQueue<PathNode>();
 		queue.add(new PathNode(start, heuristic(start, end)));
 
 		PathNode pathNode = queue.remove();
 		visited.add(pathNode.node);
-		queue = expandNode(queue, pathNode, predecessor, visited, end);
+		queue = expandNode(queue, pathNode, predecessor, visited, nodesCost,
+				end);
 		while (!pathNode.node.equals(end) && queue.size() > 0) {
-			pathNode = queue.remove();	
+			pathNode = queue.remove();
 			visited.add(pathNode.node);
-			queue = expandNode(queue, pathNode, predecessor, visited, end);
+			queue = expandNode(queue, pathNode, predecessor, visited,
+					nodesCost, end);
 		}
 
 		if (!pathNode.node.equals(end)) {
@@ -40,54 +44,47 @@ public abstract class AStar {
 	}
 
 	private List<Node> reconstructPath(Node start, PathNode pathNode,
-			Map<Node, PathNode> predecessor) {
+			Map<Node, Node> predecessor) {
 		List<Node> path = new ArrayList<Node>();
 		path.add(0, pathNode.node);
 
-		PathNode pre = predecessor.get(pathNode.node);
-		while (!pre.node.equals(start)) {
-			path.add(0, pre.node);
-			pre = predecessor.get(pre.node);
+		Node pre = predecessor.get(pathNode.node);
+		while (!pre.equals(start)) {
+			path.add(0, pre);
+			pre = predecessor.get(pre);
 		}
 		path.add(0, start);
 		return path;
 	}
 
 	private Queue<PathNode> expandNode(Queue<PathNode> queue,
-			PathNode pathNode, Map<Node, PathNode> predecessor,
-			Set<Node> visited, Node end) {
+			PathNode pathNode, Map<Node, Node> predecessor,
+			Set<Node> visited, Map<Node, Float> nodesCost, Node end) {
 		Map<Node, Integer> neighbors = pathNode.node.getNeighbors();
 		for (Map.Entry<Node, Integer> neighbor : neighbors.entrySet()) {
 			Node neighborNode = neighbor.getKey();
-			float cost = pathNode.cost + neighbor.getValue() - heuristic(pathNode.node, end);
+			float cost = pathNode.cost + neighbor.getValue()
+					- heuristic(pathNode.node, end);
 			PathNode newPathNode = new PathNode(neighborNode, cost
 					+ heuristic(neighborNode, end));
-			
-			if (!visited.contains(newPathNode.node)) {
-				queue.add(newPathNode);
-			}
 
-			if (newShortestPath(newPathNode, cost, predecessor, end)) {
-				predecessor.put(newPathNode.node, pathNode);
+			if (!visited.contains(newPathNode.node)) {
+				Float nodeCost = nodesCost.get(newPathNode.node);
+				if (nodeCost == null) {
+					queue.add(newPathNode);
+					predecessor.put(newPathNode.node, pathNode.node);
+					nodesCost.put(newPathNode.node, cost);
+				} else {
+					if (cost <= nodeCost) {
+						queue.remove(newPathNode);
+						queue.add(newPathNode);
+						nodesCost.put(newPathNode.node, cost);
+						predecessor.put(newPathNode.node, pathNode.node);
+					}
+				}
 			}
 		}
 		return queue;
-	}
-
-	private boolean newShortestPath(PathNode pathNode, float newCost,
-			Map<Node, PathNode> predecessor, Node end) {
-		PathNode oldPreNode = predecessor.get(pathNode.node);
-		if (oldPreNode == null) {
-			return true;
-		}
-
-		Map<Node, Integer> oldNeighbors = oldPreNode.node.getNeighbors();
-		float oldCost = oldPreNode.cost + oldNeighbors.get(pathNode.node) - heuristic(oldPreNode.node, end);
-		if (newCost < oldCost) {
-			return true;
-		}
-
-		return false;
 	}
 
 	public abstract float heuristic(Node node, Node end);
@@ -109,6 +106,15 @@ public abstract class AStar {
 			if (cost > o.cost)
 				return 1;
 			return 0;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (!obj.getClass().equals(this.getClass())) {
+				return false;
+			}
+			PathNode other = (PathNode) obj;
+			return this.node.equals(other.node);
 		}
 
 	}

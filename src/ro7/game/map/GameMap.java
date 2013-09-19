@@ -59,8 +59,13 @@ public class GameMap extends GameSpace {
 			for (int j = minMapPosition.y; j <= maxMapPosition.y; j++) {
 				Vec2i mapPosition = new Vec2i(i, j);
 				Terrain terrain = terrains.get(mapPosition);
-				terrain.draw(g);
-
+				terrain.draw(g);				
+			}
+		}
+		
+		for (int i = minMapPosition.x; i <= maxMapPosition.x; i++) {
+			for (int j = minMapPosition.y; j <= maxMapPosition.y; j++) {
+				Vec2i mapPosition = new Vec2i(i, j);
 				Unit unit = units.get(mapPosition);
 				if (unit != null) {
 					unit.draw(g);
