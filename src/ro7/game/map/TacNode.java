@@ -32,5 +32,10 @@ public class TacNode extends Node {
 		
 		return (float)Math.sqrt(xDistance*xDistance + yDistance*yDistance);
 	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		return super.equals(obj) && terrain.equals(((TacNode)obj).terrain);
+	}
 
 }

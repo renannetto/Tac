@@ -30,5 +30,24 @@ public class Node {
 	public Map<Node, Integer> getNeighbors() {
 		return neighbors;
 	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (!obj.getClass().equals(this.getClass()))
+			return false;
+		
+		Node other = (Node) obj;
+		
+		for (Map.Entry<Node, Integer> entrySet : neighbors.entrySet()) {
+			Node node = entrySet.getKey();
+			Integer cost = entrySet.getValue();
+			
+			Integer otherCost = other.neighbors.get(node);
+			if (otherCost == null || !otherCost.equals(cost)) {
+				return false;
+			}
+		}
+		return true;
+	}
 
 }

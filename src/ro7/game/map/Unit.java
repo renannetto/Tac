@@ -1,9 +1,8 @@
 package ro7.game.map;
 
-import java.awt.Color;
 import java.awt.Graphics2D;
 
-import ro7.engine.sprites.Circle;
+import ro7.game.sprites.UnitSprite;
 import cs195n.Vec2f;
 import cs195n.Vec2i;
 
@@ -13,12 +12,16 @@ public class Unit {
 	private boolean selected;
 	private float size;
 	private Vec2f position;
+	
+	private UnitSprite sprite;
 
 	public Unit(boolean computer, float size) {
 		this.computer = computer;
 		this.size = size;
 		this.position = new Vec2f(0.0f, 0.0f);
 		this.selected = false;
+		
+		sprite = new UnitSprite(this.position, this.computer, this.size, this.selected);
 	}
 
 	public Unit(Unit unit) {
@@ -26,36 +29,22 @@ public class Unit {
 		this.size = unit.size;
 		this.position = unit.position;
 		this.selected = unit.selected;
-	}
-
-	public void setPosition(Vec2f newPosition) {
-		this.position = newPosition;
+		
+		sprite = new UnitSprite(this.position, this.computer, this.size, this.selected);
 	}
 
 	public void draw(Graphics2D g) {
-		Color borderColor;
-		if (selected) {
-			borderColor = Color.BLUE;
-		} else {
-			borderColor = Color.WHITE;
-		}
-
-		Color fillColor;
-		if (computer) {
-			fillColor = Color.RED;
-		} else {
-			fillColor = Color.GREEN;
-		}
-		Circle unit = new Circle(position, size, borderColor, fillColor);
-		unit.draw(g);
+		sprite.draw(g);
 	}
 
 	public void select() {
 		selected = true;
+		sprite = new UnitSprite(this.position, this.computer, this.size, this.selected);
 	}
 
 	public void unselect() {
 		selected = false;
+		sprite = new UnitSprite(this.position, this.computer, this.size, this.selected);
 	}
 
 	public Vec2i getMapPosition() {
@@ -64,6 +53,7 @@ public class Unit {
 
 	public void move(Vec2f position) {
 		this.position = position;
+		sprite = new UnitSprite(this.position, this.computer, this.size, this.selected);
 	}
 
 	public boolean isComputer() {
@@ -89,10 +79,6 @@ public class Unit {
 			xCoordinate = (int)Math.ceil(position.y / size);
 		}
 		return new Vec2i(xCoordinate, yCoordinate);
-	}
-	
-	public boolean inside(Vec2f min, Vec2f max) {
-		return (position.x > min.x && position.y > min.y && position.x < max.x && position.y < max.y);
 	}
 
 }

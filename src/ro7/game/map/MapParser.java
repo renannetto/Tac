@@ -90,7 +90,7 @@ public class MapParser {
 				
 				if (!code.equals(EMPTY_UNIT) && terrains.get(code) == null) {
 					Unit newUnit = new Unit(unit);
-					newUnit.setPosition(new Vec2f(j*SQUARE_SIZE, i*SQUARE_SIZE));
+					newUnit.move(new Vec2f(j*SQUARE_SIZE, i*SQUARE_SIZE));
 					map.addUnit(newUnit, new Vec2i(i, j));
 				}
 			}
