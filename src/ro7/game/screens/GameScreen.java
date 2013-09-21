@@ -40,7 +40,7 @@ public class GameScreen extends Screen {
 	public void onTick(long nanosSincePreviousTick) {
 		try {
 			if (map != null) {
-				//map.updateComputer(nanosSincePreviousTick);
+				map.updateComputer(nanosSincePreviousTick);
 				map.moveUnits();
 				map.checkAliveUnits();
 			}
@@ -52,10 +52,7 @@ public class GameScreen extends Screen {
 	@Override
 	public void onDraw(Graphics2D g) {
 		if (map != null) {
-			System.out.println("Transform before viewport: " + g.getTransform());
 			viewport.draw(g);
-			System.out.println("Transform after viewport: " + g.getTransform());
-			System.out.println("----------------------------------------");
 			if (map.win()) {
 				win.draw(g);
 			} else if (map.lose()) {
@@ -164,7 +161,6 @@ public class GameScreen extends Screen {
 			warning = new Message(warningMessage, fontSize, Color.BLACK,
 					titlePosition);
 			
-			System.out.println("Window size: " + windowSize);
 			float endX = windowSize.x / 2.5f;
 			float endY = windowSize.y / 2.0f;
 			Vec2f endPosition = new Vec2f(endX, endY);
