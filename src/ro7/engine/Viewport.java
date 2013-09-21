@@ -49,7 +49,7 @@ public class Viewport {
 	}
 
 	public void zoomIn(float factor) {
-		Vec2f viewportDimensions = screenToGame(dimensions);
+		Vec2f viewportDimensions = getGameDimensions();
 
 		scale = scale.smult(factor);
 
@@ -58,13 +58,20 @@ public class Viewport {
 	}
 
 	public void zoomOut(float factor) {
-		Vec2f viewportDimensions = screenToGame(dimensions);
+		Vec2f viewportDimensions = getGameDimensions();
 
 		scale = scale.sdiv(factor);
 
 		Vec2f translateVector = viewportDimensions.smult(-(factor - 1)).sdiv(
 				2.0f);
 		translate(translateVector);
+	}
+	
+	private Vec2f getGameDimensions() {
+		Vec2f min = screenToGame(position);
+		Vec2f max = screenToGame(dimensions);
+		
+		return max.minus(min);
 	}
 
 	public void translate(Vec2f direction) {
