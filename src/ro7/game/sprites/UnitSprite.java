@@ -3,40 +3,50 @@ package ro7.game.sprites;
 import java.awt.Color;
 import java.awt.Graphics2D;
 
+import ro7.engine.sprites.EmptyRectangle;
+import ro7.engine.sprites.ImageSprite;
+import ro7.engine.sprites.SpriteSheet;
 import cs195n.Vec2f;
-import ro7.engine.sprites.Circle;
-import ro7.engine.sprites.Sprite;
+import cs195n.Vec2i;
 
-public class UnitSprite extends Sprite {
-	
-	private boolean computer;
-	private float size;
+public class UnitSprite extends ImageSprite {
+
+	private Vec2f dimensions;
 	private boolean selected;
 
-	public UnitSprite(Vec2f position, boolean computer, float size, boolean selected) {
-		super(position);
-		this.computer = computer;
-		this.size = size;
+	public UnitSprite(Vec2f position, Vec2f dimensions, boolean selected,
+			SpriteSheet sheet, Vec2i sheetPosition) {
+		super(position, sheet, sheetPosition);
+		this.dimensions = dimensions;
 		this.selected = selected;
+	}
+
+	public UnitSprite(UnitSprite sprite) {
+		super(sprite.position, sprite.sheet, sprite.sheetPosition);
+		this.dimensions = sprite.dimensions;
+		this.selected = sprite.selected;
 	}
 
 	@Override
 	public void draw(Graphics2D g) {
-		Color borderColor;
+		super.draw(g);
 		if (selected) {
-			borderColor = Color.BLUE;
-		} else {
-			borderColor = Color.WHITE;
+			EmptyRectangle selRectangle = new EmptyRectangle(position,
+					dimensions, Color.BLUE);
+			selRectangle.draw(g);
 		}
+	}
 
-		Color fillColor;
-		if (computer) {
-			fillColor = Color.RED;
-		} else {
-			fillColor = Color.GREEN;
-		}
-		Circle unit = new Circle(position, size, borderColor, fillColor);
-		unit.draw(g);
+	public void setPosition(Vec2f position) {
+		this.position = position;
+	}
+
+	public void select() {
+		selected = true;
+	}
+
+	public void unselect() {
+		selected = false;
 	}
 
 }

@@ -1,8 +1,7 @@
 10 10
 TERRAIN
-.. TRUE TRUE
-WW FALSE FALSE
-END TERRAIN
+.. TRUE TRUE sprites.png 5 3
+WW FALSE FALSE sprites.png 7 2
 START
 ....................
 ..WWWWWW....WWWWWW..
@@ -17,7 +16,6 @@ END
 UNITS
 aa TRUE
 bb FALSE
-END UNITS
 START
 ######aaaaaaaa######
 ####################

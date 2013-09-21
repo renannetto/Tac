@@ -5,7 +5,7 @@ import java.util.Set;
 
 public class Graph {
 	
-	private Set<Node> nodes;
+	protected Set<Node> nodes;
 	
 	public Graph() {
 		nodes = new HashSet<Node>();

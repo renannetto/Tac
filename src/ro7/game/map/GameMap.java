@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import ro7.engine.GameSpace;
-import ro7.engine.util.Graph;
 import ro7.engine.util.Node;
 import cs195n.Vec2f;
 import cs195n.Vec2i;
@@ -16,6 +15,7 @@ public class GameMap extends GameSpace {
 
 	private final int SQUARE_SIZE;
 	private final int MOVE_STEPS = 8;
+	private final int ALONE_REGION = 2;
 
 	private Vec2i matrixDimensions;
 
@@ -24,10 +24,7 @@ public class GameMap extends GameSpace {
 
 	private Unit selected;
 
-	private Graph mapGraph;
-	private Map<Terrain, TacNode> nodes;
-
-	private TacAStar astar;
+	private MapGraph mapGraph;
 
 	private Map<Unit, List<Vec2f>> moving;
 
@@ -41,28 +38,30 @@ public class GameMap extends GameSpace {
 		terrains = new HashMap<Vec2i, Terrain>();
 		units = new HashMap<Vec2i, Unit>();
 
-		nodes = new HashMap<Terrain, TacNode>();
-
 		moving = new HashMap<Unit, List<Vec2f>>();
+	}
+
+	public void buildGraph() {
+		mapGraph = new MapGraph(terrains, units);
 	}
 
 	@Override
 	public void draw(Graphics2D g, Vec2f min, Vec2f max) {
 		Vec2i minMapPosition = new Vec2i(Math.max(
-				(int) Math.floor(min.y / SQUARE_SIZE), 0), Math.max(
-				(int) Math.floor(min.x / SQUARE_SIZE), 0));
+				(int) Math.floor(min.x / SQUARE_SIZE), 0), Math.max(
+				(int) Math.floor(min.y / SQUARE_SIZE), 0));
 		Vec2i maxMapPosition = new Vec2i(Math.min(
-				(int) Math.ceil(max.y / SQUARE_SIZE), getHeight() - 1),
-				Math.min((int) Math.ceil(max.x / SQUARE_SIZE), getWidth() - 1));
+				(int) Math.ceil(max.x / SQUARE_SIZE), getWidth() - 1),
+				Math.min((int) Math.ceil(max.y / SQUARE_SIZE), getHeight() - 1));
 
 		for (int i = minMapPosition.x; i <= maxMapPosition.x; i++) {
 			for (int j = minMapPosition.y; j <= maxMapPosition.y; j++) {
 				Vec2i mapPosition = new Vec2i(i, j);
 				Terrain terrain = terrains.get(mapPosition);
-				terrain.draw(g);				
+				terrain.draw(g);
 			}
 		}
-		
+
 		for (int i = minMapPosition.x; i <= maxMapPosition.x; i++) {
 			for (int j = minMapPosition.y; j <= maxMapPosition.y; j++) {
 				Vec2i mapPosition = new Vec2i(i, j);
@@ -90,71 +89,9 @@ public class GameMap extends GameSpace {
 		return matrixDimensions.y;
 	}
 
-	public void buildGraph() {
-		mapGraph = new Graph();
-
-		addNodes();
-
-		addEdges();
-
-		astar = new TacAStar(mapGraph);
-	}
-
-	private void addEdges() {
-		for (Terrain terrain : terrains.values()) {
-			Vec2i mapPosition = terrain.getMapPosition();
-			if (isPassable(mapPosition)) {
-
-				connectNeighbor(terrain, mapPosition, new Vec2i(-1, 0));
-				connectNeighbor(terrain, mapPosition, new Vec2i(0, -1));
-				connectNeighbor(terrain, mapPosition, new Vec2i(1, 0));
-				connectNeighbor(terrain, mapPosition, new Vec2i(0, 1));
-			}
-		}
-	}
-
-	private void connectNeighbor(Terrain terrain, Vec2i mapPosition,
-			Vec2i neighborPosition) {
-		Vec2i newPosition = mapPosition.plus(neighborPosition);
-		Terrain neighbor = terrains.get(newPosition);
-		if (neighbor != null && isPassable(newPosition)) {
-			mapGraph.connect(nodes.get(terrain), nodes.get(neighbor), 1);
-		}
-	}
-
-	private void addNodes() {
-		for (Terrain terrain : terrains.values()) {
-			Vec2i mapPosition = terrain.getMapPosition();
-			if (isPassable(mapPosition)) {
-				TacNode node = new TacNode(terrain);
-				mapGraph.addNode(node);
-				nodes.put(terrain, node);
-			}
-		}
-	}
-
-	private void addNode(Vec2i mapPosition) {
-		Terrain terrain = terrains.get(mapPosition);
-		TacNode node = new TacNode(terrain);
-		mapGraph.addNode(node);
-		nodes.put(terrain, node);
-
-		connectNeighbor(terrain, mapPosition, new Vec2i(-1, 0));
-		connectNeighbor(terrain, mapPosition, new Vec2i(0, -1));
-		connectNeighbor(terrain, mapPosition, new Vec2i(1, 0));
-		connectNeighbor(terrain, mapPosition, new Vec2i(0, 1));
-	}
-
-	private void removeNode(Vec2i mapPosition) {
-		Terrain terrain = terrains.get(mapPosition);
-		TacNode node = nodes.get(terrain);
-		mapGraph.removeNode(node);
-		nodes.remove(mapPosition);
-	}
-
 	public void clicked(Vec2f gamePosition) {
-		Vec2i mapPosition = new Vec2i((int) (gamePosition.y / SQUARE_SIZE),
-				(int) (gamePosition.x / SQUARE_SIZE));
+		Vec2i mapPosition = new Vec2i((int) (gamePosition.x / SQUARE_SIZE),
+				(int) (gamePosition.y / SQUARE_SIZE));
 
 		if (isPlayerUnit(mapPosition)) {
 			Unit unit = units.get(mapPosition);
@@ -165,25 +102,23 @@ public class GameMap extends GameSpace {
 			selected = unit;
 		} else {
 			if (selected != null && isPassable(mapPosition)) {
-				getPathTo(mapPosition);
+				getPathTo(selected, mapPosition);
 			}
 		}
 	}
 
-	private void getPathTo(Vec2i mapPosition) {
-		Vec2i oldPosition = selected.getMapPosition();
+	private List<Node> getPathTo(Unit unit, Vec2i mapPosition) {
+		Vec2i oldPosition = unit.getMapPosition();
 
-		addNode(oldPosition);
+		mapGraph.addNode(oldPosition);
 
-		TacNode startPoint = nodes.get(terrains.get(oldPosition));
-		TacNode endPoint = nodes.get(terrains.get(mapPosition));
-		List<Node> path = astar.shortestPath(startPoint, endPoint);
+		List<Node> path = mapGraph.shortestPath(oldPosition, mapPosition);
 
-		removeNode(oldPosition);
+		mapGraph.removeNode(oldPosition);
 
 		if (path != null) {
 			List<Vec2f> movingPath = new ArrayList<Vec2f>();
-			Vec2f previousPoint = startPoint.getPosition();
+			Vec2f previousPoint = mapToGameCoordinates(oldPosition);
 			path.remove(0);
 			for (Node node : path) {
 				TacNode tacNode = (TacNode) node;
@@ -192,10 +127,15 @@ public class GameMap extends GameSpace {
 						movingPath);
 				previousPoint = currentPoint;
 			}
-			moving.put(selected, movingPath);
-			selected.unselect();
-			selected = null;
+			moving.put(unit, movingPath);
 		}
+
+		return path;
+	}
+
+	private Vec2f mapToGameCoordinates(Vec2i oldPosition) {
+		return new Vec2f(oldPosition.x * SQUARE_SIZE, oldPosition.y
+				* SQUARE_SIZE);
 	}
 
 	private List<Vec2f> interpolate(Vec2f previousPoint, Vec2f currentPoint,
@@ -207,7 +147,8 @@ public class GameMap extends GameSpace {
 	}
 
 	private boolean isPassable(Vec2i mapPosition) {
-		return terrains.get(mapPosition).isPassable() && !isUnit(mapPosition);
+		Terrain terrain = terrains.get(mapPosition);
+		return terrain != null && terrain.isPassable() && !isUnit(mapPosition);
 	}
 
 	private boolean isUnit(Vec2i mapPosition) {
@@ -234,8 +175,8 @@ public class GameMap extends GameSpace {
 		if (!oldMapPosition.equals(newMapPosition)) {
 			units.remove(oldMapPosition);
 			units.put(newMapPosition, unit);
-			addNode(oldMapPosition);
-			removeNode(newMapPosition);
+			mapGraph.addNode(oldMapPosition);
+			mapGraph.removeNode(newMapPosition);
 		}
 		return true;
 	}
@@ -244,8 +185,8 @@ public class GameMap extends GameSpace {
 		List<Unit> toRemove = new ArrayList<Unit>();
 
 		for (Map.Entry<Unit, List<Vec2f>> movingUnits : moving.entrySet()) {
-			Unit unit = movingUnits.getKey();
-			List<Vec2f> path = movingUnits.getValue();
+			Unit unit = movingUnits.getKey();			
+			List<Vec2f> path = movingUnits.getValue();			
 			if (moveUnit(unit, path.get(0))) {
 				path.remove(0);
 				if (path.size() == 0) {
@@ -257,6 +198,164 @@ public class GameMap extends GameSpace {
 		for (Unit unit : toRemove) {
 			moving.remove(unit);
 		}
+	}
+
+	public void stopMoving(Unit unit) {
+		moving.remove(unit);
+	}
+
+	public Unit getClosestAlly(ComputerUnit computerUnit) {
+		float minDistance = Float.MAX_VALUE;
+		Unit closest = null;
+
+		for (Unit unit : units.values()) {
+			if (unit.isComputer()) {
+				float distance = computerUnit.distance(unit);
+				if (distance < minDistance) {
+					minDistance = distance;
+					closest = unit;
+				}
+			}
+		}
+
+		return closest;
+	}
+
+	public Unit getAloneEnemy(ComputerUnit computerUnit) {
+		float minDistance = Float.MAX_VALUE;
+		Unit closest = null;
+
+		for (Map.Entry<Vec2i, Unit> unitEntries : units.entrySet()) {
+			Unit unit = unitEntries.getValue();
+			Vec2i mapPosition = unitEntries.getKey();
+			if (!unit.isComputer() && isAlone(mapPosition)) {
+				float distance = computerUnit.distance(unit);
+				if (distance < minDistance) {
+					minDistance = distance;
+					closest = unit;
+				}
+			}
+		}
+
+		return closest;
+	}
+
+	private boolean isAlone(Vec2i mapPosition) {
+		for (int i = mapPosition.x - ALONE_REGION; i <= mapPosition.x
+				+ ALONE_REGION; i++) {
+			for (int j = mapPosition.y - ALONE_REGION; j <= mapPosition.y
+					+ ALONE_REGION; j++) {
+				if (i != mapPosition.x || j != mapPosition.y) {
+					Unit unit = units.get(new Vec2i(i, j));
+					if (unit != null && !unit.isComputer()) {
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+
+	public boolean moveToUnit(Unit unit, Vec2i mapPosition) {
+		List<Node> path = null;
+
+		Vec2i left = new Vec2i(mapPosition.x - 1, mapPosition.y);
+		if (isPassable(left)) {
+			path = getPathTo(unit, left);
+			if (path != null) {
+				return true;
+			}
+		}
+
+		Vec2i right = new Vec2i(mapPosition.x + 1, mapPosition.y);
+		if (isPassable(right)) {
+			path = getPathTo(unit, right);
+			if (path != null) {
+				return true;
+			}
+		}
+
+		Vec2i up = new Vec2i(mapPosition.x, mapPosition.y - 1);
+		if (isPassable(up)) {
+			path = getPathTo(unit, up);
+			if (path != null) {
+				return true;
+			}
+		}
+
+		Vec2i down = new Vec2i(mapPosition.x, mapPosition.y + 1);
+		if (isPassable(down)) {
+			path = getPathTo(unit, down);
+			if (path != null) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public Unit getClosestEnemy(ComputerUnit computerUnit) {
+		float minDistance = Float.MAX_VALUE;
+		Unit closest = null;
+
+		for (Unit unit : units.values()) {
+			if (!unit.isComputer()) {
+				float distance = computerUnit.distance(unit);
+				if (distance < minDistance) {
+					minDistance = distance;
+					closest = unit;
+				}
+			}
+		}
+
+		return closest;
+	}
+
+	public void updateComputer(long nanoseconds) {
+		for (Unit unit : units.values()) {
+			if (unit.isComputer()) {
+				((ComputerUnit) unit).update(nanoseconds);
+			}
+		}
+	}
+
+	public void checkAliveUnits() {
+		List<Vec2i> deadUnits = new ArrayList<Vec2i>();
+		
+		for (Map.Entry<Vec2i, Unit> entryUnits : units.entrySet()) {
+			Unit unit = entryUnits.getValue();
+			Vec2i mapPosition = entryUnits.getKey();
+			if (!unit.isAlive()) {
+				mapGraph.addNode(mapPosition);
+				moving.remove(unit);
+				if (selected != null && selected.equals(unit)) {
+					selected = null;
+				}
+				deadUnits.add(mapPosition);
+			}
+		}
+		
+		for (Vec2i mapPosition : deadUnits) {
+			units.remove(mapPosition);
+		}
+	}
+
+	public boolean win() {
+		for (Unit unit : units.values()) {
+			if (unit.isComputer()) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	public boolean lose() {
+		for (Unit unit : units.values()) {
+			if (!unit.isComputer()) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 }

@@ -47,13 +47,16 @@ public class TitleScreen extends Screen {
 
 	@Override
 	public void onKeyPressed(KeyEvent e) {
-		int keyCode = e.getKeyCode();
-		if (keyCode >= 49 && keyCode <= 55) {
-			MapParser parser = new MapParser();
-			String mapFile = "maps/"
-					+ mapMenu.getOption(keyCode - 49);
-			GameMap map = parser.parseMap(new File(mapFile));
-			app.pushScreen(new GameScreen(app, map));
+		try {
+			int keyCode = e.getKeyCode();
+			if (keyCode >= 49 && keyCode <= 55) {
+				MapParser parser = new MapParser();
+				String mapFile = "maps/" + mapMenu.getOption(keyCode - 49);
+				GameMap map = parser.parseMap(new File(mapFile));
+				app.pushScreen(new GameScreen(app, map));
+			}
+		} catch (Exception exception) {
+			exception.printStackTrace();
 		}
 	}
 
@@ -107,8 +110,8 @@ public class TitleScreen extends Screen {
 			float titleX = windowSize.x / 2.5f;
 			float titleY = windowSize.y / 5.0f;
 			int fontSize = windowSize.x / 24;
-			title = new Message("Tac!", fontSize*2, Color.WHITE,
-					new Vec2f(titleX, titleY));
+			title = new Message("Tac!", fontSize * 2, Color.WHITE, new Vec2f(
+					titleX, titleY));
 
 			float menuX = windowSize.x / 2.5f;
 			float menuY = windowSize.y / 3.0f;
@@ -129,8 +132,9 @@ public class TitleScreen extends Screen {
 					Color.WHITE, new Vec2f(0.0f, 0.0f)));
 			mapMenu.addOption(new Message("badsize2.map", fontSize / 2,
 					Color.WHITE, new Vec2f(0.0f, 0.0f)));
-			
-			background = new FilledRectangle(new Vec2f(0.0f, 0.0f), new Vec2f(windowSize.x, windowSize.y), Color.BLACK, Color.BLACK);
+
+			background = new FilledRectangle(new Vec2f(0.0f, 0.0f), new Vec2f(
+					windowSize.x, windowSize.y), Color.BLACK, Color.BLACK);
 		} catch (NullPointerException e) {
 			System.out.println("No window size defined");
 		}

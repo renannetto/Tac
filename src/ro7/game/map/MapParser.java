@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
+import ro7.engine.sprites.SpriteSheet;
 import ro7.game.exceptions.ExpectedTokenException;
 import ro7.game.exceptions.InvalidTerrainException;
 import ro7.game.exceptions.InvalidTokenException;
@@ -19,34 +20,37 @@ import cs195n.Vec2i;
 
 public class MapParser {
 
-	private final float SQUARE_SIZE = 50.0f;
+	private final float SQUARE_SIZE = 32.0f;
 	private final String EMPTY_UNIT = "##";
-	
+
 	private BufferedReader reader;
 	private Scanner scanner;
-	
+
 	private GameMap map;
-	
+
 	private Map<String, Terrain> terrains;
 	private Map<String, Unit> units;
-	
+
+	private Map<String, SpriteSheet> sheets;
+
 	public MapParser() {
 		terrains = new HashMap<String, Terrain>();
 		units = new HashMap<String, Unit>();
+		sheets = new HashMap<String, SpriteSheet>();
 	}
-	
+
 	public GameMap parseMap(File mapFile) {
-		try {			
+		try {
 			reader = new BufferedReader(new FileReader(mapFile));
-			
+
 			parseDimensions();
 			parseTerrain();
 			parseMapLayout();
 			parseUnits();
 			parseUnitsPosition();
-			
+
 			map.buildGraph();
-			
+
 			scanner.close();
 			reader.close();
 		} catch (FileNotFoundException e) {
@@ -65,106 +69,139 @@ public class MapParser {
 		return map;
 	}
 
-	private void parseUnitsPosition() throws IOException, InvalidUnitException, ExpectedTokenException {
+	private void parseUnitsPosition() throws IOException, InvalidUnitException,
+			ExpectedTokenException {
 		String line;
 		line = reader.readLine();
 		if (!line.equals("START")) {
 			throw new ExpectedTokenException("START", line);
 		}
-		
+
 		int width = map.getWidth();
 		int height = map.getHeight();
-		for (int i=0; i<height; i++) {
+		for (int i = 0; i < height; i++) {
 			line = reader.readLine();
 			scanner = new Scanner(line);
-			for (int j=0; j<width; j++) {
+			for (int j = 0; j < width; j++) {
 				String code = scanner.findInLine(Pattern.compile(".."));
-				if (code==null) {
+				if (code == null) {
 					throw new ExpectedTokenException("<code>", line);
 				}
-				
+
 				Unit unit = units.get(code);
-				if (unit == null && !code.equals(EMPTY_UNIT) && terrains.get(code) == null) {
+				if (unit == null && !code.equals(EMPTY_UNIT)
+						&& terrains.get(code) == null) {
 					throw new InvalidUnitException(code, line);
 				}
-				
+
 				if (!code.equals(EMPTY_UNIT) && terrains.get(code) == null) {
-					Unit newUnit = new Unit(unit);
-					newUnit.move(new Vec2f(j*SQUARE_SIZE, i*SQUARE_SIZE));
-					map.addUnit(newUnit, new Vec2i(i, j));
+					Unit newUnit;
+					if (unit.isComputer()) {
+						newUnit = new ComputerUnit((ComputerUnit) unit, map);
+					} else {
+						newUnit = new Unit(unit);
+					}
+					newUnit.move(new Vec2f(j * SQUARE_SIZE, i * SQUARE_SIZE));
+					map.addUnit(newUnit, new Vec2i(j, i));
 				}
 			}
 		}
-		
+
 		line = reader.readLine();
 		if (!line.equals("END")) {
 			throw new ExpectedTokenException("END", line);
 		}
 	}
 
-	private void parseUnits() throws IOException, ExpectedTokenException, InvalidTokenException {
+	private void parseUnits() throws IOException, ExpectedTokenException,
+			InvalidTokenException {
 		String line;
 		line = reader.readLine();
 		if (!line.equals("UNITS")) {
 			throw new ExpectedTokenException("UNITS", line);
 		}
-		
+
 		line = reader.readLine();
-		while (line!=null && !line.equals("END UNITS")) {
+		while (line != null && !line.equals("END UNITS")) {
 			scanner = new Scanner(line);
-			
+
 			if (!scanner.hasNext(Pattern.compile(".."))) {
 				throw new ExpectedTokenException("<code>", line);
 			}
 			String code = scanner.next(Pattern.compile(".."));
 			if (code.equals(EMPTY_UNIT)) {
-				throw new InvalidTokenException("## is a token reserved to the empty space");
+				throw new InvalidTokenException(
+						"## is a token reserved to the empty space");
 			}
-			
+
 			if (!scanner.hasNextBoolean()) {
 				throw new ExpectedTokenException("TRUE or FALSE", line);
 			}
 			boolean computer = scanner.nextBoolean();
-			
-			Unit unit = new Unit(computer, SQUARE_SIZE);
+
+			if (!scanner.hasNext()) {
+				throw new ExpectedTokenException("<sprite>", line);
+			}
+			String sprite = scanner.next();
+
+			if (!scanner.hasNextInt()) {
+				throw new ExpectedTokenException("<column>", line);
+			}
+			int column = scanner.nextInt();
+
+			if (!scanner.hasNextInt()) {
+				throw new ExpectedTokenException("<row>", line);
+			}
+			int row = scanner.nextInt();
+
+			Unit unit;
+			if (computer) {
+				unit = new ComputerUnit(new Vec2f(SQUARE_SIZE, SQUARE_SIZE),
+						getSpriteSheet(sprite), new Vec2i(column, row), map);
+			} else {
+				unit = new Unit(new Vec2f(SQUARE_SIZE, SQUARE_SIZE),
+						getSpriteSheet(sprite), new Vec2i(column, row));
+			}
 			units.put(code, unit);
 			line = reader.readLine();
 		}
-		
-		if (line==null) {
+
+		if (line == null) {
 			throw new ExpectedTokenException("END UNITS", line);
 		}
 	}
 
-	private void parseMapLayout() throws IOException, InvalidTerrainException, ExpectedTokenException {
+	private void parseMapLayout() throws IOException, InvalidTerrainException,
+			ExpectedTokenException {
 		String line;
 		line = reader.readLine();
 		if (!line.equals("START")) {
 			throw new ExpectedTokenException("START", line);
 		}
-		
+
 		int width = map.getWidth();
 		int height = map.getHeight();
-		for (int i=0; i<height; i++) {
+		for (int i = 0; i < height; i++) {
 			line = reader.readLine();
 			scanner = new Scanner(line);
-			for (int j=0; j<width; j++) {
+			for (int j = 0; j < width; j++) {
 				String code = scanner.findInLine(Pattern.compile(".."));
-				if (code==null) {
+				if (code == null) {
 					throw new ExpectedTokenException("<code>", line);
 				}
-				
+
 				Terrain terrain = terrains.get(code);
 				if (terrain == null) {
 					throw new InvalidTerrainException(code, line);
 				}
-				
+
 				Terrain newTerrain = new Terrain(terrain);
-				map.addTerrain(newTerrain, new Vec2i(i, j));
-				newTerrain.setPosition(new Vec2f(j*SQUARE_SIZE, i*SQUARE_SIZE));
+				newTerrain.setPosition(new Vec2f(j * SQUARE_SIZE, i
+						* SQUARE_SIZE));
+				map.addTerrain(newTerrain, new Vec2i(j, i));
 			}
 		}
-		
+
 		line = reader.readLine();
 		if (!line.equals("END")) {
 			throw new ExpectedTokenException("END", line);
@@ -177,45 +214,65 @@ public class MapParser {
 		if (!line.equals("TERRAIN")) {
 			throw new ExpectedTokenException("TERRAIN", line);
 		}
-		
+
 		line = reader.readLine();
-		while (line!=null && !line.equals("END TERRAIN")) {
+		while (line != null && !line.equals("END TERRAIN")) {
 			scanner = new Scanner(line);
-			
+
 			if (!scanner.hasNext(Pattern.compile(".."))) {
 				throw new ExpectedTokenException("<code>", line);
 			}
 			String code = scanner.next(Pattern.compile(".."));
-			
+
 			if (!scanner.hasNextBoolean()) {
 				throw new ExpectedTokenException("TRUE or FALSE", line);
 			}
 			boolean passable = scanner.nextBoolean();
-			
+
 			if (!scanner.hasNextBoolean()) {
 				throw new ExpectedTokenException("TRUE or FALSE", line);
 			}
 			boolean projectiles = scanner.nextBoolean();
-			
-			//String sprite = scanner.next();
-			//int column = scanner.nextInt();
-			//int row = scanner.nextInt();
-			
-			Terrain terrain = new Terrain(passable, projectiles, SQUARE_SIZE); 
+
+			if (!scanner.hasNext()) {
+				throw new ExpectedTokenException("<sprite>", line);
+			}
+			String sprite = scanner.next();
+
+			if (!scanner.hasNextInt()) {
+				throw new ExpectedTokenException("<column>", line);
+			}
+			int column = scanner.nextInt();
+
+			if (!scanner.hasNextInt()) {
+				throw new ExpectedTokenException("<row>", line);
+			}
+			int row = scanner.nextInt();
+
+			Terrain terrain = new Terrain(passable, projectiles, SQUARE_SIZE,
+					getSpriteSheet(sprite), new Vec2i(column, row));
 			terrains.put(code, terrain);
 			line = reader.readLine();
 		}
-		
-		if (line==null) {
+
+		if (line == null) {
 			throw new ExpectedTokenException("END TERRAIN", line);
 		}
+	}
+
+	private SpriteSheet getSpriteSheet(String sprite) {
+		SpriteSheet sheet = sheets.get(sprite);
+		if (sheet == null) {
+			sheet = new SpriteSheet(sprite, new Vec2i(32, 32), 1);
+		}
+		return sheet;
 	}
 
 	private void parseDimensions() throws IOException, ExpectedTokenException {
 		String line;
 		line = reader.readLine();
 		scanner = new Scanner(line);
-		
+
 		if (!scanner.hasNextInt()) {
 			throw new ExpectedTokenException("<width>", line);
 		}
@@ -223,7 +280,7 @@ public class MapParser {
 		if (width < 1) {
 			throw new ExpectedTokenException("Positive <width>", line);
 		}
-		
+
 		if (!scanner.hasNextInt()) {
 			throw new ExpectedTokenException("<height>", line);
 		}
@@ -231,9 +288,10 @@ public class MapParser {
 		if (height < 1) {
 			throw new ExpectedTokenException("Negative <width>", line);
 		}
-		
+
 		Vec2i matrixDimensions = new Vec2i(width, height);
-		Vec2f dimensions = new Vec2f(matrixDimensions.x*SQUARE_SIZE, matrixDimensions.y*SQUARE_SIZE);
+		Vec2f dimensions = new Vec2f(matrixDimensions.x * SQUARE_SIZE,
+				matrixDimensions.y * SQUARE_SIZE);
 		map = new GameMap(new Vec2f(0.0f, 0.0f), dimensions, matrixDimensions);
 	}
 

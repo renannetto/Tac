@@ -1,5 +1,6 @@
 package ro7.engine;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Shape;
 
@@ -32,18 +33,22 @@ public class Viewport {
 	}
 
 	private void doTransform(Graphics2D g) {
+		//g.translate(-gamePosition.x, -gamePosition.y);
 		g.translate(position.x, position.y);
 		g.scale(scale.x, scale.y);
 		g.translate(-gamePosition.x, -gamePosition.y);
+		//g.translate(position.x, position.y);
 	}
 
 	private void undoTransform(Graphics2D g) {
-		g.translate(-position.x, -position.y);
-		g.scale(1 / scale.x, 1 / scale.y);
+		//g.translate(-position.x, -position.y);
 		g.translate(gamePosition.x, gamePosition.y);
+		g.scale(1.0f / scale.x, 1.0f / scale.y);
+		g.translate(-position.x, -position.y);
+		//g.translate(gamePosition.x, gamePosition.y);
 	}
 
-	public Vec2f screenToGame(Vec2f point) {		
+	public Vec2f screenToGame(Vec2f point) {
 		return point.minus(position).pdiv(scale).plus(gamePosition);
 	}
 
@@ -53,7 +58,7 @@ public class Viewport {
 		scale = scale.smult(factor);
 
 		Vec2f translateVector = viewportDimensions.smult(factor - 1).sdiv(2.0f);
-		
+
 		translate(translateVector);
 	}
 
@@ -72,16 +77,17 @@ public class Viewport {
 	}
 
 	public void draw(Graphics2D g) {
-		EmptyRectangle viewport = new EmptyRectangle(position, dimensions);
+		EmptyRectangle viewport = new EmptyRectangle(position, dimensions,
+				Color.BLACK);
 		viewport.draw(g);
 
 		Shape clip = g.getClip();
 		g.setClip(viewport.getShape());
 		doTransform(g);
-		
+
 		Vec2f min = screenToGame(position);
 		Vec2f max = screenToGame(dimensions);
-		
+
 		gameSpace.draw(g, min, max);
 		undoTransform(g);
 		g.setClip(clip);

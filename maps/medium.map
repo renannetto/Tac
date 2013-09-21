@@ -24,8 +24,8 @@ START
 ........................................
 END
 UNITS
-aa TRUE
-bb FALSE
+aa TRUE sprites.png 15 10
+bb FALSE sprites.png 14 0
 END UNITS
 START
 ######aaaaaaaa############aaaaaaaa######

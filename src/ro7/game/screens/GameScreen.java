@@ -25,6 +25,8 @@ public class GameScreen extends Screen {
 
 	private String warningMessage;
 	private Message warning;
+	private Message win;
+	private Message lose;
 
 	public GameScreen(Application app, GameMap map) {
 		super(app);
@@ -36,15 +38,29 @@ public class GameScreen extends Screen {
 
 	@Override
 	public void onTick(long nanosSincePreviousTick) {
-		if (map != null) {
-			map.moveUnits();
+		try {
+			if (map != null) {
+				//map.updateComputer(nanosSincePreviousTick);
+				map.moveUnits();
+				map.checkAliveUnits();
+			}
+		} catch (Exception exception) {
+			exception.printStackTrace();
 		}
 	}
 
 	@Override
 	public void onDraw(Graphics2D g) {
 		if (map != null) {
+			System.out.println("Transform before viewport: " + g.getTransform());
 			viewport.draw(g);
+			System.out.println("Transform after viewport: " + g.getTransform());
+			System.out.println("----------------------------------------");
+			if (map.win()) {
+				win.draw(g);
+			} else if (map.lose()) {
+				lose.draw(g);
+			}
 		} else {
 			warning.draw(g);
 		}
@@ -85,22 +101,21 @@ public class GameScreen extends Screen {
 
 	@Override
 	public void onMouseClicked(MouseEvent e) {
-		Point point = e.getPoint();
-		
-		Vec2f gamePosition = viewport.screenToGame(new Vec2f(point.x, point.y));
-		
-		map.clicked(gamePosition);
+		// TODO Auto-generated method stub
+
 	}
 
 	@Override
 	public void onMousePressed(MouseEvent e) {
-		// TODO Auto-generated method stub
+		Point point = e.getPoint();
 
+		Vec2f gamePosition = viewport.screenToGame(new Vec2f(point.x, point.y));
+
+		map.clicked(gamePosition);
 	}
 
 	@Override
 	public void onMouseReleased(MouseEvent e) {
-		// TODO Auto-generated method stub
 
 	}
 
@@ -144,9 +159,17 @@ public class GameScreen extends Screen {
 
 			float titleX = windowSize.x / 8.0f;
 			float titleY = windowSize.y / 5.0f;
+			Vec2f titlePosition = new Vec2f(titleX, titleY);
 			int fontSize = windowSize.x / 24;
 			warning = new Message(warningMessage, fontSize, Color.BLACK,
-					new Vec2f(titleX, titleY));
+					titlePosition);
+			
+			System.out.println("Window size: " + windowSize);
+			float endX = windowSize.x / 2.5f;
+			float endY = windowSize.y / 2.0f;
+			Vec2f endPosition = new Vec2f(endX, endY);
+			win = new Message("You won!", fontSize, Color.BLACK, endPosition);
+			lose = new Message("You lost!", fontSize, Color.BLACK, endPosition);
 		} catch (NullPointerException e) {
 			System.out.println("No window size defined");
 		}

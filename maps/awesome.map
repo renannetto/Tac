@@ -1,13 +1,13 @@
 40 40
 TERRAIN
-Ww FALSE TRUE
-FS FALSE FALSE
-FU FALSE FALSE
-DD FALSE FALSE
-.. TRUE TRUE
-gg TRUE TRUE
-bs TRUE TRUE
-bu TRUE TRUE
+Ww FALSE TRUE sprites.png 6 3
+FS FALSE FALSE sprites.png 0 1
+FU FALSE FALSE sprites.png 2 2
+DD FALSE FALSE sprites.png 10 2
+.. TRUE TRUE sprites.png 5 3
+gg TRUE TRUE sprites.png 3 3
+bs TRUE TRUE sprites.png 0 3
+bu TRUE TRUE sprites.png 8 2
 END TERRAIN
 START
 ..........DD......................................DD......................DD....
@@ -52,8 +52,8 @@ DDDD....DDDD........................DD......................DD..................
 ....................................................................DD..........
 END
 UNITS
-aa TRUE
-bb FALSE
+aa TRUE sprites.png 15 10
+bb FALSE sprites.png 14 0
 END UNITS
 START
 aaaaaaaa..DD......................................DD......................DD....

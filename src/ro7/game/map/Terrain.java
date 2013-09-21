@@ -1,9 +1,9 @@
 package ro7.game.map;
 
-import java.awt.Color;
 import java.awt.Graphics2D;
 
-import ro7.engine.sprites.FilledRectangle;
+import ro7.engine.sprites.SpriteSheet;
+import ro7.game.sprites.TerrainSprite;
 import cs195n.Vec2f;
 import cs195n.Vec2i;
 
@@ -14,11 +14,15 @@ public class Terrain {
 	private float size;
 	private Vec2f position;
 	
-	public Terrain(boolean passable, boolean projectiles, float size) {
+	private TerrainSprite sprite;
+	
+	public Terrain(boolean passable, boolean projectiles, float size, SpriteSheet sheet, Vec2i sheetPosition) {
 		this.passable = passable;
 		this.projectiles = projectiles;
 		this.size = size;
 		this.position = new Vec2f(0.0f, 0.0f);
+		
+		this.sprite = new TerrainSprite(this.position, sheet, sheetPosition);
 	}
 	
 	public Terrain(Terrain terrain) {
@@ -26,23 +30,17 @@ public class Terrain {
 		this.projectiles = terrain.projectiles;
 		this.size = terrain.size;
 		this.position = terrain.position;
+		
+		this.sprite = new TerrainSprite(terrain.sprite);
 	}
 	
 	public void setPosition(Vec2f newPosition) {
 		this.position = newPosition;
+		sprite.setPosition(newPosition);
 	}
 	
 	public void draw(Graphics2D g) {
-		Color borderColor = Color.WHITE;
-		Color fillColor;
-		if (passable) {
-			fillColor = Color.GRAY;
-		} else {
-			fillColor = Color.BLACK;
-		}
-		
-		FilledRectangle terrain = new FilledRectangle(position, new Vec2f(size, size), borderColor, fillColor);
-		terrain.draw(g);
+		sprite.draw(g);
 	}
 
 	public boolean isPassable() {
@@ -50,15 +48,11 @@ public class Terrain {
 	}
 	
 	public Vec2i getMapPosition() {
-		return new Vec2i((int)(position.y/size), (int)(position.x/size));
+		return new Vec2i((int)(position.x/size), (int)(position.y/size));
 	}
 
 	public Vec2f getPosition() {
 		return position;
-	}
-
-	public boolean inside(Vec2f min, Vec2f max) {
-		return (position.x > min.x && position.y > min.y && position.x < max.x && position.y < max.y);
 	}
 
 }
