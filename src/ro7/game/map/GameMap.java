@@ -28,6 +28,8 @@ public class GameMap extends GameSpace {
 
 	private Map<Unit, List<Vec2f>> moving;
 
+	private Map<Unit, Unit> attacking;
+
 	protected GameMap(Vec2f position, Vec2f dimensions, Vec2i matrixDimensions) {
 		super(position, dimensions);
 
@@ -39,6 +41,8 @@ public class GameMap extends GameSpace {
 		units = new HashMap<Vec2i, Unit>();
 
 		moving = new HashMap<Unit, List<Vec2f>>();
+
+		attacking = new HashMap<Unit, Unit>();
 	}
 
 	public void buildGraph() {
@@ -107,6 +111,20 @@ public class GameMap extends GameSpace {
 		}
 	}
 
+	public void rightClicked(Vec2f gamePosition) {
+		Vec2i mapPosition = new Vec2i((int) (gamePosition.x / SQUARE_SIZE),
+				(int) (gamePosition.y / SQUARE_SIZE));
+
+		if (isComputerUnit(mapPosition)) {
+			if (selected != null) {
+				if (!selected.nextTo(units.get(mapPosition))) {
+					moveToUnit(selected, mapPosition);
+				}
+				attack(selected, units.get(mapPosition));
+			}
+		}
+	}
+
 	private List<Node> getPathTo(Unit unit, Vec2i mapPosition) {
 		Vec2i oldPosition = unit.getMapPosition();
 
@@ -160,6 +178,10 @@ public class GameMap extends GameSpace {
 		return unit != null && !unit.isComputer();
 	}
 
+	private boolean isComputerUnit(Vec2i mapPosition) {
+		return !isPlayerUnit(mapPosition);
+	}
+
 	public boolean moveUnit(Unit unit, Vec2f position) {
 		Vec2i oldMapPosition = unit.getMapPosition();
 		Vec2i nextMapPosition = unit.getTargetMapPosition(position);
@@ -185,8 +207,8 @@ public class GameMap extends GameSpace {
 		List<Unit> toRemove = new ArrayList<Unit>();
 
 		for (Map.Entry<Unit, List<Vec2f>> movingUnits : moving.entrySet()) {
-			Unit unit = movingUnits.getKey();			
-			List<Vec2f> path = movingUnits.getValue();			
+			Unit unit = movingUnits.getKey();
+			List<Vec2f> path = movingUnits.getValue();
 			if (moveUnit(unit, path.get(0))) {
 				path.remove(0);
 				if (path.size() == 0) {
@@ -204,16 +226,16 @@ public class GameMap extends GameSpace {
 		moving.remove(unit);
 	}
 
-	public Unit getClosestAlly(ComputerUnit computerUnit) {
+	public Unit getClosestAlly(Unit unit) {
 		float minDistance = Float.MAX_VALUE;
 		Unit closest = null;
 
-		for (Unit unit : units.values()) {
-			if (unit.isComputer()) {
-				float distance = computerUnit.distance(unit);
+		for (Unit neighbor : units.values()) {
+			if (neighbor.isAlly(unit)) {
+				float distance = unit.distance(neighbor);
 				if (distance < minDistance) {
 					minDistance = distance;
-					closest = unit;
+					closest = neighbor;
 				}
 			}
 		}
@@ -221,18 +243,16 @@ public class GameMap extends GameSpace {
 		return closest;
 	}
 
-	public Unit getAloneEnemy(ComputerUnit computerUnit) {
+	public Unit getAloneEnemy(Unit unit) {
 		float minDistance = Float.MAX_VALUE;
 		Unit closest = null;
 
-		for (Map.Entry<Vec2i, Unit> unitEntries : units.entrySet()) {
-			Unit unit = unitEntries.getValue();
-			Vec2i mapPosition = unitEntries.getKey();
-			if (!unit.isComputer() && isAlone(mapPosition)) {
-				float distance = computerUnit.distance(unit);
+		for (Unit neighbor : units.values()) {
+			if (!neighbor.isAlly(unit) && isAlone(neighbor)) {
+				float distance = unit.distance(neighbor);
 				if (distance < minDistance) {
 					minDistance = distance;
-					closest = unit;
+					closest = neighbor;
 				}
 			}
 		}
@@ -240,14 +260,15 @@ public class GameMap extends GameSpace {
 		return closest;
 	}
 
-	private boolean isAlone(Vec2i mapPosition) {
+	public boolean isAlone(Unit unit) {
+		Vec2i mapPosition = unit.getMapPosition();
 		for (int i = mapPosition.x - ALONE_REGION; i <= mapPosition.x
 				+ ALONE_REGION; i++) {
 			for (int j = mapPosition.y - ALONE_REGION; j <= mapPosition.y
 					+ ALONE_REGION; j++) {
 				if (i != mapPosition.x || j != mapPosition.y) {
-					Unit unit = units.get(new Vec2i(i, j));
-					if (unit != null && !unit.isComputer()) {
+					Unit neighbor = units.get(new Vec2i(i, j));
+					if (neighbor != null && neighbor.isAlly(unit)) {
 						return false;
 					}
 				}
@@ -294,16 +315,16 @@ public class GameMap extends GameSpace {
 		return false;
 	}
 
-	public Unit getClosestEnemy(ComputerUnit computerUnit) {
+	public Unit getClosestEnemy(Unit unit) {
 		float minDistance = Float.MAX_VALUE;
 		Unit closest = null;
 
-		for (Unit unit : units.values()) {
-			if (!unit.isComputer()) {
-				float distance = computerUnit.distance(unit);
+		for (Unit neighbor : units.values()) {
+			if (!neighbor.isAlly(unit)) {
+				float distance = unit.distance(neighbor);
 				if (distance < minDistance) {
 					minDistance = distance;
-					closest = unit;
+					closest = neighbor;
 				}
 			}
 		}
@@ -321,7 +342,7 @@ public class GameMap extends GameSpace {
 
 	public void checkAliveUnits() {
 		List<Vec2i> deadUnits = new ArrayList<Vec2i>();
-		
+
 		for (Map.Entry<Vec2i, Unit> entryUnits : units.entrySet()) {
 			Unit unit = entryUnits.getValue();
 			Vec2i mapPosition = entryUnits.getKey();
@@ -334,7 +355,7 @@ public class GameMap extends GameSpace {
 				deadUnits.add(mapPosition);
 			}
 		}
-		
+
 		for (Vec2i mapPosition : deadUnits) {
 			units.remove(mapPosition);
 		}
@@ -348,7 +369,7 @@ public class GameMap extends GameSpace {
 		}
 		return true;
 	}
-	
+
 	public boolean lose() {
 		for (Unit unit : units.values()) {
 			if (!unit.isComputer()) {
@@ -356,6 +377,23 @@ public class GameMap extends GameSpace {
 			}
 		}
 		return true;
+	}
+
+	public void attackUnits() {
+		for (Map.Entry<Unit, Unit> entryUnits : attacking.entrySet()) {
+			Unit attacker = entryUnits.getKey();
+			Unit target = entryUnits.getValue();
+
+			if (attacker.nextTo(target)) {
+				target.attacked();
+			}
+		}
+	}
+
+	public void attack(Unit attacker, Unit target) {
+		if (!attacker.isAlly(target)) {
+			attacking.put(attacker, target);
+		}
 	}
 
 }

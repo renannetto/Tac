@@ -94,4 +94,13 @@ public class Unit {
 		return lifepoints > 0;
 	}
 
+	public boolean isAlly(Unit unit) {
+		return (this.isComputer() && unit.isComputer()) || (!this.isComputer() && !unit.isComputer());
+	}
+
+	public boolean nextTo(Unit targetUnit) {
+		float distance = this.distance(targetUnit);
+		return (distance <= targetUnit.dimensions.x || distance <= targetUnit.dimensions.y);
+	}
+
 }

@@ -16,6 +16,8 @@ public class ComputerUnit extends Unit {
 
 	private Composite root;
 	private Unit target;
+	
+	private float elapsedTime = 0;
 
 	public ComputerUnit(Vec2f dimensions, SpriteSheet sheet,
 			Vec2i sheetPosition, GameMap map) {
@@ -35,12 +37,14 @@ public class ComputerUnit extends Unit {
 		Composite attackSingle = new Sequence();
 
 		BTNode health = new HealthNode();
+		BTNode aloneNode = new AloneNode(map);
 		BTNode regroup = new RegroupNode(map);
 		BTNode aloneEnemy = new AloneEnemyNode(map);
 		BTNode attackAlone = new AttackAloneNode(map);
 		BTNode attackAny = new AttackAnyNode(map);
 
 		defense.addChild(health);
+		defense.addChild(aloneNode);
 		defense.addChild(regroup);
 
 		attackSingle.addChild(aloneEnemy);
@@ -54,7 +58,11 @@ public class ComputerUnit extends Unit {
 	}
 
 	public void update(float nanoseconds) {
-		root.update(nanoseconds);
+		elapsedTime += nanoseconds / 1000000000.0f;
+		if (elapsedTime >= 0.1) {
+			elapsedTime = 0;
+			root.update(nanoseconds);
+		}
 	}
 
 	public class HealthNode implements BTNode {
@@ -62,6 +70,30 @@ public class ComputerUnit extends Unit {
 		@Override
 		public Status update(float nanoseconds) {
 			if (lifepoints < 50) {
+				return SUCCESS;
+			}
+			return FAILURE;
+		}
+
+		@Override
+		public void reset() {
+			// TODO Auto-generated method stub
+
+		}
+
+	}
+
+	public class AloneNode implements BTNode {
+
+		private GameMap map;
+
+		public AloneNode(GameMap map) {
+			this.map = map;
+		}
+
+		@Override
+		public Status update(float nanoseconds) {
+			if (map.isAlone(ComputerUnit.this)) {
 				return SUCCESS;
 			}
 			return FAILURE;
@@ -93,8 +125,7 @@ public class ComputerUnit extends Unit {
 				status = FAILURE;
 				return FAILURE;
 			}
-			float distance = ally.distance(ComputerUnit.this);
-			if (distance <= ally.dimensions.x || distance <= ally.dimensions.y) {
+			if (ComputerUnit.this.nextTo(ally)) {
 				status = SUCCESS;
 				return SUCCESS;
 			}
@@ -112,7 +143,7 @@ public class ComputerUnit extends Unit {
 
 		@Override
 		public void reset() {
-			//map.stopMoving(ComputerUnit.this);
+			// map.stopMoving(ComputerUnit.this);
 		}
 
 	}
@@ -156,10 +187,8 @@ public class ComputerUnit extends Unit {
 
 		@Override
 		public Status update(float nanoseconds) {
-			float distance = target.distance(ComputerUnit.this);
-			if (distance <= target.dimensions.x
-					|| distance <= target.dimensions.y) {
-				target.attacked();
+			if (ComputerUnit.this.nextTo(target)) {
+				map.attack(ComputerUnit.this, target);
 				status = SUCCESS;
 				return SUCCESS;
 			}
@@ -177,7 +206,7 @@ public class ComputerUnit extends Unit {
 
 		@Override
 		public void reset() {
-			//map.stopMoving(ComputerUnit.this);
+			// map.stopMoving(ComputerUnit.this);
 		}
 
 	}
@@ -200,9 +229,7 @@ public class ComputerUnit extends Unit {
 				return FAILURE;
 			}
 
-			float distance = enemy.distance(ComputerUnit.this);
-			if (distance <= enemy.dimensions.x
-					|| distance <= enemy.dimensions.y) {
+			if (ComputerUnit.this.nextTo(enemy)) {
 				enemy.attacked();
 				status = SUCCESS;
 				return SUCCESS;
@@ -222,7 +249,7 @@ public class ComputerUnit extends Unit {
 
 		@Override
 		public void reset() {
-			//map.stopMoving(ComputerUnit.this);
+			// map.stopMoving(ComputerUnit.this);
 		}
 
 	}

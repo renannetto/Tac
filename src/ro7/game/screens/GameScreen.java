@@ -40,8 +40,9 @@ public class GameScreen extends Screen {
 	public void onTick(long nanosSincePreviousTick) {
 		try {
 			if (map != null) {
-				map.updateComputer(nanosSincePreviousTick);
 				map.moveUnits();
+				map.attackUnits();
+				map.updateComputer(nanosSincePreviousTick);
 				map.checkAliveUnits();
 			}
 		} catch (Exception exception) {
@@ -108,7 +109,12 @@ public class GameScreen extends Screen {
 
 		Vec2f gamePosition = viewport.screenToGame(new Vec2f(point.x, point.y));
 
-		map.clicked(gamePosition);
+		int button = e.getButton();
+		if (button == 1) {
+			map.clicked(gamePosition);
+		} else {
+			map.rightClicked(gamePosition);
+		}
 	}
 
 	@Override
@@ -160,7 +166,7 @@ public class GameScreen extends Screen {
 			int fontSize = windowSize.x / 24;
 			warning = new Message(warningMessage, fontSize, Color.BLACK,
 					titlePosition);
-			
+
 			float endX = windowSize.x / 2.5f;
 			float endY = windowSize.y / 2.0f;
 			Vec2f endPosition = new Vec2f(endX, endY);
