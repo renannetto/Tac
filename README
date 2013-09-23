@@ -1,20 +1,33 @@
-Tac README
+Tac II README
 
 How to verify engine requirements:
- - Pathfinding: the package ro7.engine.util contains three classes: Graph, Node an AStar. The user can create a class that extends Node and create a graph with these nodes. To use AStar, he has to create a class that extends it and implement the heursitic method. All the A* pathfinding is on these three classes, except for the heuristic.
- - Viewports: the viewport class can be used as an element to be added on the screen. Its difference to the regular UI elements is that it contains a GameSpace object, which represents the content that will be drawn on it. On each draw event, the viewport will apply the necessary transformation, draw the GameSpace and revert the transformations. To use it, the user has to create a class that extends GameSpace and implements the draw method, which receives a Graphics2D object and the min and max positions of the viewport.
+ - Sprite-sheet images: the ro7.engine.sprites package contains a SpriteSheet class, which contains a sheet image and is able to draw only a part with it, using the information about the padding and the frame size.
+ - Shared images: the class ImageSprite in the same package corresponds to an individual sprite. This sprite will have a reference to the sprite sheet, so it is possible to use the same sprite sheet reference with many sprites.
+ - Animations: the AnimatedSprite is a subclass of ImageSprite which has a method to update its frame on the animation. The user can extend this class and implement the updateSheetPosition method to update the position of the sprite on the sheet based on the current animation frame.
+ - Behavior trees: all the classes of the Behavior Tree are on ro7.engine.ai. Those classes are: BTNode (interface), Composite (abstract class), Selector and Sequence. This way, the user can use Selector and Sequences, and create leaf nodes that implement the BTNode interface and execute an action or test a condition.
 
 Map format:
- - The map format used was almost the same as the described on the assignment. The only differences were:
-	1) Since there are no sprites been used yet, the line to defain a terrain is in the format "<code> <boolean> <boolean>", where code is a two-character identifier, the first <boolean> indicate whether the terrain is passable for units and the second one whether it is passable for projectiles
-	2) After defining the terrains, and before the START line, you have to put an END TERRAIN line
-	3) After defining the units, and before the START line, you have to put an END UNTIS line
- - An example of valid map is:
+ - The map format used was almost the same used for Tac I, but with the following changes:
+	1) There is a SPRITESHEETS section before defining the TERRAIN. This section has the following strucuture:
+		- Starts with a SPRITESHEETS line
+		- Has any number of lines with the format <sprite_file> <frame_width> <frame_height> <padding_x> <padding_y>, which gives all the information about the sprite sheet, including frame size and padding
+		- Ends with an END SPRITESHEETS line
+	2) Since now sprites are being used for the units and terrain, the lines to define these elements have changed to: 
+		- Terrain: <code> <passable> <projectile> <sprite_file> <position_x_on_sheet> <position_y_on_sheet>. So, it includes the sprite sheet of the terrain and its position on the sheet.
+		- Unit: <code> <computer> <moving_sprite_sheet> <position_x_on_sheet> <position_y_on_sheet> <animation_frames> <attacking_sprite_sheet> <animation_frames>. So, it includes the moving and attacking sprite sheets, its position on the moving sheet and the number of animation frames on both sheets.
+ - A valid map format now is:
 
 10 9
+SPRITESHEETS
+sprites/sprites.png 32 32 1 1
+sprites/player_moving.png 24 27 0 0
+sprites/computer_moving.png 24 27 0 0
+sprites/player_attacking.png 24 27 3 3
+sprites/computer_attacking.png 24 27 3 3
+END SPRITESHEETS
 TERRAIN
-.. TRUE TRUE
-WW FALSE FALSE
+.. TRUE TRUE sprites/sprites.png 5 3
+WW FALSE FALSE sprites/sprites.png 7 2
 END TERRAIN
 START
 ....................
@@ -28,8 +41,8 @@ START
 ....................
 END
 UNITS
-aa TRUE
-bb FALSE
+aa TRUE sprites/computer_moving.png 0 2 3 sprites/computer_attacking.png 4
+bb FALSE sprites/player_moving.png 0 0 3 sprites/player_attacking.png 4
 END UNITS
 START
 ######aaaaaaaa######
@@ -44,15 +57,22 @@ START
 END
 
 Game requirements:
- - Gray squares are passable, black square are impassable. Units can not move through impassable squares
- - Player units are showed as green circles, computer units are showed as red circles
- - The player can pan the game window use the arrow keys and zoom in and out using the mouse scroll
- - The player can select units left clicking them
- - Selected units have a blue border around it
- - The player can move selected units by clicking on the target square
- - Units will move according to the requirements ot the target place (using A*, moving smoothly, changing directions only when in the center, without overlapping units)
+ - Computer and player units are represented from different animated sprites
+ - Unit animations play when they are moving or attacking
+ - Enemy units can attack themselves, but ally units can't
+ - The health bar of each unit is shown above it, when it goes completely red, the unit dies and it is removed from the game
+ - The computer team is controlled by the following behavior tree:
+	1) The root node is a selector among defense and attack
+	2) Defense is a sequence that checks if the unit is below 50% of health and if true, try to move closer to an ally
+	3) Attack is a selector among strategies:
+		- If there is an alone enemy, the unit will attack it
+		- Otherwise, it will attack the closest enemy
+ - If one team lose all its units, the game ends
+ - It is possible to start a new game by pressing Esc and selecting a new map
 
 Known bugs:
  - If you zoom in and zoom out some times, the viewport ends a little bit translated, probably due to round error.
 
-Approximate number of hours: 24 hours
+Approximate number of hours: 15 hours
+
+Sprites from: http://opengameart.org/users/charlesgabriel
