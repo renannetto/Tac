@@ -7,6 +7,8 @@ import java.util.Map;
 import cs195n.Vec2i;
 import ro7.engine.util.Graph;
 import ro7.engine.util.Node;
+import ro7.game.model.Terrain;
+import ro7.game.model.Unit;
 
 public class MapGraph extends Graph {
 	

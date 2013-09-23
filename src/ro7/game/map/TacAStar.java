@@ -1,6 +1,6 @@
 package ro7.game.map;
 
-import ro7.engine.util.AStar;
+import ro7.engine.ai.AStar;
 import ro7.engine.util.Graph;
 import ro7.engine.util.Node;
 

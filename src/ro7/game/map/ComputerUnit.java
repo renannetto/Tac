@@ -1,16 +1,17 @@
 package ro7.game.map;
 
 import static ro7.engine.ai.Status.FAILURE;
-import static ro7.engine.ai.Status.SUCCESS;
 import static ro7.engine.ai.Status.RUNNING;
+import static ro7.engine.ai.Status.SUCCESS;
 import ro7.engine.ai.BTNode;
 import ro7.engine.ai.Composite;
 import ro7.engine.ai.Selector;
 import ro7.engine.ai.Sequence;
 import ro7.engine.ai.Status;
-import ro7.engine.sprites.SpriteSheet;
+import ro7.game.model.GameMap;
+import ro7.game.model.Unit;
+import ro7.game.sprites.UnitSprite;
 import cs195n.Vec2f;
-import cs195n.Vec2i;
 
 public class ComputerUnit extends Unit {
 
@@ -19,9 +20,8 @@ public class ComputerUnit extends Unit {
 	
 	private float elapsedTime = 0;
 
-	public ComputerUnit(Vec2f dimensions, SpriteSheet sheet,
-			Vec2i sheetPosition, GameMap map) {
-		super(dimensions, sheet, sheetPosition);
+	public ComputerUnit(Vec2f dimensions, UnitSprite movingSprite, UnitSprite attackingSprite, GameMap map) {
+		super(dimensions, movingSprite, attackingSprite);
 		buildBehaviorTree(map);
 	}
 
@@ -192,6 +192,9 @@ public class ComputerUnit extends Unit {
 				status = SUCCESS;
 				return SUCCESS;
 			}
+			if (!target.isAlive()) {
+				return FAILURE;
+			}
 			if (status != RUNNING) {
 				if (map.moveToUnit(ComputerUnit.this, target.getMapPosition())) {
 					status = RUNNING;
@@ -230,7 +233,7 @@ public class ComputerUnit extends Unit {
 			}
 
 			if (ComputerUnit.this.nextTo(enemy)) {
-				enemy.attacked();
+				map.attack(ComputerUnit.this, enemy);
 				status = SUCCESS;
 				return SUCCESS;
 			}

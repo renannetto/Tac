@@ -14,8 +14,8 @@ import ro7.engine.Screen;
 import ro7.engine.sprites.FilledRectangle;
 import ro7.engine.sprites.Menu;
 import ro7.engine.sprites.Message;
-import ro7.game.map.GameMap;
 import ro7.game.map.MapParser;
+import ro7.game.model.GameMap;
 
 public class TitleScreen extends Screen {
 

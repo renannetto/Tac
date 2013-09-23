@@ -3,11 +3,8 @@ Tac instructions:
 - Title screen: type the number correspondent of the map on the menu
 
 - Game screen: 
-  - Green units are player units
-  - Red units are computer units
-  - Gray squares are passable
-  - Black squares are impassable
   - Left click on a player unit to select it
+  - Right click on a computer unit to attack it
   - With an unit selected, left click in a passable square to move the unit to that square
   - Use the mouse scroll to zoom in or zoom out
   - Use the keyboard arrows to move the map

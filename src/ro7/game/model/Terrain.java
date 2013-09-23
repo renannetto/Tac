@@ -1,4 +1,4 @@
-package ro7.game.map;
+package ro7.game.model;
 
 import java.awt.Graphics2D;
 

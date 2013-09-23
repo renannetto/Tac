@@ -1,4 +1,4 @@
-package ro7.game.map;
+package ro7.game.model;
 
 import java.awt.Graphics2D;
 import java.util.ArrayList;
@@ -7,14 +7,18 @@ import java.util.List;
 import java.util.Map;
 
 import ro7.engine.GameSpace;
+import ro7.engine.Viewport;
 import ro7.engine.util.Node;
+import ro7.game.map.ComputerUnit;
+import ro7.game.map.MapGraph;
+import ro7.game.map.TacNode;
 import cs195n.Vec2f;
 import cs195n.Vec2i;
 
 public class GameMap extends GameSpace {
 
 	private final int SQUARE_SIZE;
-	private final int MOVE_STEPS = 8;
+	private final int MOVE_STEPS = 20;
 	private final int ALONE_REGION = 2;
 
 	private Vec2i matrixDimensions;
@@ -30,7 +34,7 @@ public class GameMap extends GameSpace {
 
 	private Map<Unit, Unit> attacking;
 
-	protected GameMap(Vec2f position, Vec2f dimensions, Vec2i matrixDimensions) {
+	public GameMap(Vec2f position, Vec2f dimensions, Vec2i matrixDimensions) {
 		super(position, dimensions);
 
 		this.matrixDimensions = matrixDimensions;
@@ -50,7 +54,7 @@ public class GameMap extends GameSpace {
 	}
 
 	@Override
-	public void draw(Graphics2D g, Vec2f min, Vec2f max) {
+	public void draw(Graphics2D g, Vec2f min, Vec2f max, Viewport viewport) {
 		Vec2i minMapPosition = new Vec2i(Math.max(
 				(int) Math.floor(min.x / SQUARE_SIZE), 0), Math.max(
 				(int) Math.floor(min.y / SQUARE_SIZE), 0));
@@ -71,7 +75,7 @@ public class GameMap extends GameSpace {
 				Vec2i mapPosition = new Vec2i(i, j);
 				Unit unit = units.get(mapPosition);
 				if (unit != null) {
-					unit.draw(g);
+					unit.draw(g, viewport);
 				}
 			}
 		}
@@ -332,11 +336,19 @@ public class GameMap extends GameSpace {
 		return closest;
 	}
 
-	public void updateComputer(long nanoseconds) {
+	public void update(long nanoseconds) {
 		for (Unit unit : units.values()) {
 			if (unit.isComputer()) {
 				((ComputerUnit) unit).update(nanoseconds);
 			}
+		}
+		
+		for (Unit unit : moving.keySet()) {
+			unit.updateMoving(nanoseconds);
+		}
+		
+		for (Unit unit: attacking.keySet()) {
+			unit.updateAttacking(nanoseconds);
 		}
 	}
 
@@ -385,7 +397,11 @@ public class GameMap extends GameSpace {
 			Unit target = entryUnits.getValue();
 
 			if (attacker.nextTo(target)) {
+				attacker.attack(target);
 				target.attacked();
+				if (!target.isAlive()) {
+					attacker.stopAttack();
+				}
 			}
 		}
 	}

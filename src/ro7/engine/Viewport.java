@@ -32,13 +32,13 @@ public class Viewport {
 		this.gamePosition = gamePosition;
 	}
 
-	private void doTransform(Graphics2D g) {
+	public void doTransform(Graphics2D g) {
 		g.translate(position.x, position.y);
 		g.scale(scale.x, scale.y);
 		g.translate(-gamePosition.x, -gamePosition.y);
 	}
 
-	private void undoTransform(Graphics2D g) {
+	public void undoTransform(Graphics2D g) {
 		g.translate(gamePosition.x, gamePosition.y);
 		g.scale(1.0f / scale.x, 1.0f / scale.y);
 		g.translate(-position.x, -position.y);
@@ -46,6 +46,10 @@ public class Viewport {
 
 	public Vec2f screenToGame(Vec2f point) {
 		return point.minus(position).pdiv(scale).plus(gamePosition);
+	}
+	
+	public Vec2f gameToScreen(Vec2f point) {
+		return point.minus(gamePosition).pmult(scale).plus(position);
 	}
 
 	public void zoomIn(float factor) {
@@ -90,7 +94,7 @@ public class Viewport {
 		Vec2f min = screenToGame(position);
 		Vec2f max = screenToGame(dimensions);
 
-		gameSpace.draw(g, min, max);
+		gameSpace.draw(g, min, max, this);
 		undoTransform(g);
 		g.setClip(clip);
 	}

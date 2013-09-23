@@ -11,13 +11,13 @@ import ro7.engine.Application;
 import ro7.engine.Screen;
 import ro7.engine.Viewport;
 import ro7.engine.sprites.Message;
-import ro7.game.map.GameMap;
+import ro7.game.model.GameMap;
 import cs195n.Vec2f;
 import cs195n.Vec2i;
 
 public class GameScreen extends Screen {
 
-	private final float MOVE_FACTOR = 10.0f;
+	private final float MOVE_FACTOR = 20.0f;
 	private final float ZOOM_FACTOR = 1.1f;
 
 	private GameMap map;
@@ -42,7 +42,7 @@ public class GameScreen extends Screen {
 			if (map != null) {
 				map.moveUnits();
 				map.attackUnits();
-				map.updateComputer(nanosSincePreviousTick);
+				map.update(nanosSincePreviousTick);
 				map.checkAliveUnits();
 			}
 		} catch (Exception exception) {
@@ -52,15 +52,19 @@ public class GameScreen extends Screen {
 
 	@Override
 	public void onDraw(Graphics2D g) {
-		if (map != null) {
-			viewport.draw(g);
-			if (map.win()) {
-				win.draw(g);
-			} else if (map.lose()) {
-				lose.draw(g);
+		try {
+			if (map != null) {
+				viewport.draw(g);
+				if (map.win()) {
+					win.draw(g);
+				} else if (map.lose()) {
+					lose.draw(g);
+				}
+			} else {
+				warning.draw(g);
 			}
-		} else {
-			warning.draw(g);
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
 	}
 
@@ -104,7 +108,7 @@ public class GameScreen extends Screen {
 	}
 
 	@Override
-	public void onMousePressed(MouseEvent e) {
+	public void onMousePressed(MouseEvent e) {		
 		Point point = e.getPoint();
 
 		Vec2f gamePosition = viewport.screenToGame(new Vec2f(point.x, point.y));

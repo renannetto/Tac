@@ -14,7 +14,7 @@ public abstract class GameSpace {
 		this.dimensions = dimensions;
 	}
 
-	public abstract void draw(Graphics2D g, Vec2f min, Vec2f max);
+	public abstract void draw(Graphics2D g, Vec2f min, Vec2f max, Viewport viewport);
 
 	public Vec2f getDimensions() {
 		return dimensions;

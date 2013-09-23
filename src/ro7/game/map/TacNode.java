@@ -1,6 +1,7 @@
 package ro7.game.map;
 
 import ro7.engine.util.Node;
+import ro7.game.model.Terrain;
 import cs195n.Vec2f;
 import cs195n.Vec2i;
 

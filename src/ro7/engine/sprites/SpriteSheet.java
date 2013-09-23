@@ -14,9 +14,9 @@ public class SpriteSheet {
 	
 	private BufferedImage sheet;
 	private Vec2i frameDimensions;
-	private int padding;
+	private Vec2i padding;
 	
-	public SpriteSheet(String sheetFile, Vec2i dimensions, int padding) {
+	public SpriteSheet(String sheetFile, Vec2i dimensions, Vec2i padding) {
 		try {
 			sheet = ImageIO.read(new File(sheetFile));
 			this.frameDimensions = dimensions;
@@ -27,8 +27,8 @@ public class SpriteSheet {
 	}
 	
 	public void draw(Graphics2D g, Vec2i sheetPosition, Vec2f position) {
-		int x = (sheetPosition.x*frameDimensions.x) + ((sheetPosition.x+1)*padding);
-		int y = (sheetPosition.y*frameDimensions.y) + ((sheetPosition.y+1)*padding);
+		int x = (sheetPosition.x*frameDimensions.x) + ((sheetPosition.x+1)*padding.x);
+		int y = (sheetPosition.y*frameDimensions.y) + ((sheetPosition.y+1)*padding.y);
 		BufferedImage subImage = sheet.getSubimage(x, y, frameDimensions.x, frameDimensions.y);
 		g.drawImage(subImage, (int)position.x, (int)position.y, null);
 	}

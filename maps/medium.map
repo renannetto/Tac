@@ -1,7 +1,14 @@
 20 18
+SPRITESHEETS
+sprites/sprites.png 32 32 1 1
+sprites/player_moving.png 24 27 0 0
+sprites/computer_moving.png 24 27 0 0
+sprites/player_attacking.png 24 27 3 3
+sprites/computer_attacking.png 24 27 3 3
+END SPRITESHEETS
 TERRAIN
-.. TRUE TRUE sprites.png 5 3
-WW FALSE FALSE sprites.png 7 2
+.. TRUE TRUE sprites/sprites.png 5 3
+WW FALSE FALSE sprites/sprites.png 7 2
 END TERRAIN
 START
 ........................................
@@ -24,8 +31,8 @@ START
 ........................................
 END
 UNITS
-aa TRUE sprites.png 15 10
-bb FALSE sprites.png 14 0
+aa TRUE sprites/computer_moving.png 0 2 3 sprites/computer_attacking.png 4
+bb FALSE sprites/player_moving.png 0 0 3 sprites/player_attacking.png 4
 END UNITS
 START
 ######aaaaaaaa############aaaaaaaa######

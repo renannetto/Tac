@@ -1,4 +1,4 @@
-package ro7.engine.util;
+package ro7.engine.ai;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,6 +8,9 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
+
+import ro7.engine.util.Graph;
+import ro7.engine.util.Node;
 
 public abstract class AStar {
 

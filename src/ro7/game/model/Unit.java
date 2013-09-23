@@ -1,30 +1,36 @@
-package ro7.game.map;
+package ro7.game.model;
 
 import java.awt.Graphics2D;
 
-import ro7.engine.sprites.SpriteSheet;
+import ro7.engine.Viewport;
+import ro7.game.map.ComputerUnit;
 import ro7.game.sprites.UnitSprite;
 import cs195n.Vec2f;
 import cs195n.Vec2i;
 
 public class Unit {
-	
-	private final float ATTACK_DAMAGE = 5.0f;
+
+	private final float ATTACK_DAMAGE = 1f;
 
 	protected Vec2f dimensions;
 	protected Vec2f position;
 	protected float lifepoints;
 
-	private UnitSprite sprite;
+	private boolean attacking;
 
-	public Unit(Vec2f dimensions, SpriteSheet sheet,
-			Vec2i sheetPosition) {
+	private UnitSprite movingSprite;
+	private UnitSprite attackingSprite;
+
+	public Unit(Vec2f dimensions, UnitSprite movingSprite,
+			UnitSprite attackingSprite) {
 		this.dimensions = dimensions;
 		this.position = new Vec2f(0.0f, 0.0f);
 		this.lifepoints = 100;
 
-		sprite = new UnitSprite(this.position, this.dimensions, false, sheet,
-				sheetPosition);
+		this.attacking = false;
+
+		this.movingSprite = movingSprite;
+		this.attackingSprite = attackingSprite;
 	}
 
 	public Unit(Unit unit) {
@@ -32,19 +38,34 @@ public class Unit {
 		this.position = unit.position;
 		this.lifepoints = unit.lifepoints;
 
-		sprite = new UnitSprite(unit.sprite);
+		this.attacking = false;
+
+		this.movingSprite = new UnitSprite(unit.movingSprite);
+		this.attackingSprite = new UnitSprite(unit.attackingSprite);
 	}
 
-	public void draw(Graphics2D g) {
-		sprite.draw(g);
+	public void draw(Graphics2D g, Viewport viewport) {
+		if (!attacking) {
+			movingSprite.draw(g, viewport);
+		} else {
+			attackingSprite.draw(g, viewport);
+		}
+	}
+
+	public void updateMoving(long nanosSincePreviousTick) {
+		movingSprite.update(nanosSincePreviousTick);
+	}
+
+	public void updateAttacking(long nanosSincePreviousTick) {
+		attackingSprite.update(nanosSincePreviousTick);
 	}
 
 	public void select() {
-		sprite.select();
+		movingSprite.select();
 	}
 
 	public void unselect() {
-		sprite.unselect();
+		movingSprite.unselect();
 	}
 
 	public Vec2i getMapPosition() {
@@ -54,7 +75,11 @@ public class Unit {
 
 	public void move(Vec2f position) {
 		this.position = position;
-		sprite.setPosition(position);
+		if (attacking) {
+			stopAttack();
+		}
+		movingSprite.move(position);
+		attackingSprite.move(position);
 	}
 
 	public boolean isComputer() {
@@ -85,9 +110,11 @@ public class Unit {
 	public float distance(Unit unit) {
 		return position.dist(unit.position);
 	}
-	
+
 	public void attacked() {
 		lifepoints -= ATTACK_DAMAGE;
+		movingSprite.damage(ATTACK_DAMAGE);
+		attackingSprite.damage(ATTACK_DAMAGE);
 	}
 
 	public boolean isAlive() {
@@ -95,12 +122,22 @@ public class Unit {
 	}
 
 	public boolean isAlly(Unit unit) {
-		return (this.isComputer() && unit.isComputer()) || (!this.isComputer() && !unit.isComputer());
+		return (this.isComputer() && unit.isComputer())
+				|| (!this.isComputer() && !unit.isComputer());
 	}
 
 	public boolean nextTo(Unit targetUnit) {
 		float distance = this.distance(targetUnit);
 		return (distance <= targetUnit.dimensions.x || distance <= targetUnit.dimensions.y);
+	}
+
+	public void attack(Unit target) {
+		attackingSprite.updateDirection(target.position);
+		attacking = true;
+	}
+
+	public void stopAttack() {
+		attacking = false;
 	}
 
 }

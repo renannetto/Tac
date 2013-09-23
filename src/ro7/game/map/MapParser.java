@@ -15,6 +15,10 @@ import ro7.game.exceptions.ExpectedTokenException;
 import ro7.game.exceptions.InvalidTerrainException;
 import ro7.game.exceptions.InvalidTokenException;
 import ro7.game.exceptions.InvalidUnitException;
+import ro7.game.model.GameMap;
+import ro7.game.model.Terrain;
+import ro7.game.model.Unit;
+import ro7.game.sprites.UnitSprite;
 import cs195n.Vec2f;
 import cs195n.Vec2i;
 
@@ -44,6 +48,7 @@ public class MapParser {
 			reader = new BufferedReader(new FileReader(mapFile));
 
 			parseDimensions();
+			parseSpriteSheets();
 			parseTerrain();
 			parseMapLayout();
 			parseUnits();
@@ -67,6 +72,55 @@ public class MapParser {
 			return null;
 		}
 		return map;
+	}
+
+	private void parseSpriteSheets() throws IOException,
+			ExpectedTokenException, InvalidTokenException {
+		String line;
+		line = reader.readLine();
+		if (!line.equals("SPRITESHEETS")) {
+			throw new ExpectedTokenException("SPRITESHEETS", line);
+		}
+
+		line = reader.readLine();
+		while (line != null && !line.equals("END SPRITESHEETS")) {
+			scanner = new Scanner(line);
+
+			if (!scanner.hasNext()) {
+				throw new ExpectedTokenException("<file>", line);
+			}
+			String file = scanner.next();
+
+			if (!scanner.hasNextInt()) {
+				throw new ExpectedTokenException("<frame width>", line);
+			}
+			int frameWidth = scanner.nextInt();
+
+			if (!scanner.hasNextInt()) {
+				throw new ExpectedTokenException("<frame height>", line);
+			}
+			int frameHeight = scanner.nextInt();
+
+			if (!scanner.hasNextInt()) {
+				throw new ExpectedTokenException("<padding x>", line);
+			}
+			int paddingX = scanner.nextInt();
+
+			if (!scanner.hasNextInt()) {
+				throw new ExpectedTokenException("<padding y>", line);
+			}
+			int paddingY = scanner.nextInt();
+
+			SpriteSheet sheet = new SpriteSheet(file, new Vec2i(frameWidth,
+					frameHeight), new Vec2i(paddingX, paddingY));
+
+			sheets.put(file, sheet);
+			line = reader.readLine();
+		}
+
+		if (line == null) {
+			throw new ExpectedTokenException("END SPRITESHEET", line);
+		}
 	}
 
 	private void parseUnitsPosition() throws IOException, InvalidUnitException,
@@ -142,7 +196,7 @@ public class MapParser {
 			if (!scanner.hasNext()) {
 				throw new ExpectedTokenException("<sprite>", line);
 			}
-			String sprite = scanner.next();
+			String movingSprite = scanner.next();
 
 			if (!scanner.hasNextInt()) {
 				throw new ExpectedTokenException("<column>", line);
@@ -154,13 +208,44 @@ public class MapParser {
 			}
 			int row = scanner.nextInt();
 
+			if (!scanner.hasNextInt()) {
+				throw new ExpectedTokenException("<int>", line);
+			}
+			int movingFrames = scanner.nextInt();
+
+			if (!scanner.hasNext()) {
+				throw new ExpectedTokenException("<sprite>", line);
+			}
+			String attackSprite = scanner.next();
+
+			if (!scanner.hasNextInt()) {
+				throw new ExpectedTokenException("<int>", line);
+			}
+			int attackFrames = scanner.nextInt();
+
+			SpriteSheet movingSheet = sheets.get(movingSprite);
+			if (movingSheet == null) {
+				throw new InvalidTokenException(movingSprite
+						+ " is not a valid sprite sheet");
+			}
+			Vec2f dimensions = new Vec2f(SQUARE_SIZE, SQUARE_SIZE);
+			Vec2i sheetPosition = new Vec2i(column, row);
+			UnitSprite moving = new UnitSprite(new Vec2f(0.0f, 0.0f),
+					dimensions, false, movingSheet, sheetPosition, movingFrames);
+			
+			SpriteSheet attackSheet = sheets.get(attackSprite);
+			if (attackSheet == null) {
+				throw new InvalidTokenException(attackSprite
+						+ " is not a valid sprite sheet");
+			}
+			UnitSprite attacking = new UnitSprite(new Vec2f(0.0f, 0.0f), dimensions, false, attackSheet, new Vec2i(0, 0), attackFrames);
+
 			Unit unit;
 			if (computer) {
 				unit = new ComputerUnit(new Vec2f(SQUARE_SIZE, SQUARE_SIZE),
-						getSpriteSheet(sprite), new Vec2i(column, row), map);
+						moving, attacking, map);
 			} else {
-				unit = new Unit(new Vec2f(SQUARE_SIZE, SQUARE_SIZE),
-						getSpriteSheet(sprite), new Vec2i(column, row));
+				unit = new Unit(new Vec2f(SQUARE_SIZE, SQUARE_SIZE), moving, attacking);
 			}
 			units.put(code, unit);
 			line = reader.readLine();
@@ -208,7 +293,8 @@ public class MapParser {
 		}
 	}
 
-	private void parseTerrain() throws IOException, ExpectedTokenException {
+	private void parseTerrain() throws IOException, ExpectedTokenException,
+			InvalidTokenException {
 		String line;
 		line = reader.readLine();
 		if (!line.equals("TERRAIN")) {
@@ -249,8 +335,14 @@ public class MapParser {
 			}
 			int row = scanner.nextInt();
 
+			SpriteSheet sheet = sheets.get(sprite);
+			if (sheet == null) {
+				throw new InvalidTokenException(sprite
+						+ " is not a valid sprite sheet");
+			}
+
 			Terrain terrain = new Terrain(passable, projectiles, SQUARE_SIZE,
-					getSpriteSheet(sprite), new Vec2i(column, row));
+					sheet, new Vec2i(column, row));
 			terrains.put(code, terrain);
 			line = reader.readLine();
 		}
@@ -258,14 +350,6 @@ public class MapParser {
 		if (line == null) {
 			throw new ExpectedTokenException("END TERRAIN", line);
 		}
-	}
-
-	private SpriteSheet getSpriteSheet(String sprite) {
-		SpriteSheet sheet = sheets.get(sprite);
-		if (sheet == null) {
-			sheet = new SpriteSheet(sprite, new Vec2i(32, 32), 1);
-		}
-		return sheet;
 	}
 
 	private void parseDimensions() throws IOException, ExpectedTokenException {
