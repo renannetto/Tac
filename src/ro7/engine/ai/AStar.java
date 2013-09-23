@@ -20,6 +20,13 @@ public abstract class AStar {
 		this.graph = graph;
 	}
 
+	/**
+	 * Calculate the shortest path from one node to another
+	 * @param start start node on the path
+	 * @param end end node on the path
+	 * @return a list of nodes with the shortest path or null
+	 * if there is no path
+	 */
 	public List<Node> shortestPath(Node start, Node end) {
 		Map<Node, Node> predecessor = new HashMap<Node, Node>();
 		Set<Node> visited = new HashSet<Node>();
@@ -46,6 +53,13 @@ public abstract class AStar {
 		return reconstructPath(start, pathNode, predecessor);
 	}
 
+	/**
+	 * Construct the path found by shortestPath
+	 * @param start start node on the path
+	 * @param pathNode end node on the path
+	 * @param predecessor predecessor mapping
+	 * @return list of nodes with the path
+	 */
 	private List<Node> reconstructPath(Node start, PathNode pathNode,
 			Map<Node, Node> predecessor) {
 		List<Node> path = new ArrayList<Node>();
@@ -60,6 +74,17 @@ public abstract class AStar {
 		return path;
 	}
 
+	/**
+	 * Get the neighbors of the current node and add them to the queue,
+	 * if necessary
+	 * @param queue current queue
+	 * @param pathNode current visited node
+	 * @param predecessor predecessor mapping
+	 * @param visited visited nodes
+	 * @param nodesCost cost of all the seen nodes
+	 * @param end end node of the path
+	 * @return the resulting queue
+	 */
 	private Queue<PathNode> expandNode(Queue<PathNode> queue,
 			PathNode pathNode, Map<Node, Node> predecessor,
 			Set<Node> visited, Map<Node, Float> nodesCost, Node end) {
@@ -90,6 +115,12 @@ public abstract class AStar {
 		return queue;
 	}
 
+	/**
+	 * Estimate the cost to get from one node to another
+	 * @param node current node
+	 * @param end target node
+	 * @return the cost from node to end
+	 */
 	public abstract float heuristic(Node node, Node end);
 
 	private class PathNode implements Comparable<PathNode> {

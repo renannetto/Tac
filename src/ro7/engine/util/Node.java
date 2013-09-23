@@ -12,14 +12,26 @@ public class Node {
 		neighbors = new HashMap<Node, Integer>();
 	}
 	
+	/**
+	 * Connect to another node
+	 * @param node node to be connected
+	 * @param cost cost of the edge
+	 */
 	public void connect(Node node, int cost) {
 		neighbors.put(node, cost);
 	}
 	
+	/**
+	 * Disconnect from another node
+	 * @param node node to be disconnected
+	 */
 	public void disconnect(Node node) {
 		neighbors.remove(node);
 	}
 	
+	/**
+	 * Disconnect this node from all its neighbors
+	 */
 	public void delete() {
 		Set<Node> neighborNodes = neighbors.keySet();
 		for (Node node : neighborNodes) {

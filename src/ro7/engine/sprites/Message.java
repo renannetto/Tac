@@ -6,6 +6,10 @@ import java.awt.Graphics2D;
 
 import cs195n.Vec2f;
 
+/**
+ * @author ro7
+ * Sprite that represents a text message
+ */
 public class Message extends Sprite {
 	
 	private String text;

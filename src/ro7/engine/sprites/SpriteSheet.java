@@ -26,6 +26,13 @@ public class SpriteSheet {
 		}
 	}
 	
+	/**
+	 * Draw sprite correspondent to the given position on the sprite 
+	 * sheet
+	 * @param g Graphics object used to draw
+	 * @param sheetPosition position of the sprite on the sprite sheet
+	 * @param position position on the screen to draw
+	 */
 	public void draw(Graphics2D g, Vec2i sheetPosition, Vec2f position) {
 		int x = (sheetPosition.x*frameDimensions.x) + ((sheetPosition.x+1)*padding.x);
 		int y = (sheetPosition.y*frameDimensions.y) + ((sheetPosition.y+1)*padding.y);

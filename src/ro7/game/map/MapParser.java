@@ -15,6 +15,7 @@ import ro7.game.exceptions.ExpectedTokenException;
 import ro7.game.exceptions.InvalidTerrainException;
 import ro7.game.exceptions.InvalidTokenException;
 import ro7.game.exceptions.InvalidUnitException;
+import ro7.game.model.ComputerUnit;
 import ro7.game.model.GameMap;
 import ro7.game.model.Terrain;
 import ro7.game.model.Unit;

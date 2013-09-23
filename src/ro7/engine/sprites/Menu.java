@@ -6,6 +6,10 @@ import java.util.List;
 
 import cs195n.Vec2f;
 
+/**
+ * @author ro7
+ * Sprite that represents a text menu
+ */
 public class Menu extends Sprite {
 
 	private Vec2f space;

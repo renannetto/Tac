@@ -3,14 +3,13 @@ package ro7.game.model;
 import java.awt.Graphics2D;
 
 import ro7.engine.Viewport;
-import ro7.game.map.ComputerUnit;
 import ro7.game.sprites.UnitSprite;
 import cs195n.Vec2f;
 import cs195n.Vec2i;
 
 public class Unit {
 
-	private final float ATTACK_DAMAGE = 1f;
+	protected final float ATTACK_DAMAGE = 1f;
 
 	protected Vec2f dimensions;
 	protected Vec2f position;
@@ -111,10 +110,15 @@ public class Unit {
 		return position.dist(unit.position);
 	}
 
-	public void attacked() {
-		lifepoints -= ATTACK_DAMAGE;
-		movingSprite.damage(ATTACK_DAMAGE);
-		attackingSprite.damage(ATTACK_DAMAGE);
+	public void attacked(Unit attacker) {
+		float damage = attacker.getAttackDamage();
+		lifepoints -= damage;
+		movingSprite.damage(damage);
+		attackingSprite.damage(damage);
+	}
+	
+	protected float getAttackDamage() {
+		return ATTACK_DAMAGE;
 	}
 
 	public boolean isAlive() {

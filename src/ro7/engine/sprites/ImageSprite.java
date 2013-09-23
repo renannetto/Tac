@@ -5,6 +5,10 @@ import java.awt.Graphics2D;
 import cs195n.Vec2f;
 import cs195n.Vec2i;
 
+/**
+ * @author ro7
+ * Sprite that represents an Image
+ */
 public class ImageSprite extends Sprite {
 	
 	protected SpriteSheet sheet;

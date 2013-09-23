@@ -49,6 +49,10 @@ public abstract class Screen {
 	public abstract void onMouseWheelMoved(MouseWheelEvent e);
 
 	
+	/**
+	 * Updates the window size of the screen
+	 * @param newSize new size to be updated
+	 */
 	public void onResize(Vec2i newSize) {
 		windowSize = newSize;
 	}

@@ -8,6 +8,10 @@ import java.awt.geom.Ellipse2D;
 
 import cs195n.Vec2f;
 
+/**
+ * @author ro7
+ * Sprite that represents a colored circle
+ */
 public class Circle extends Sprite {
 	
 	private float size;

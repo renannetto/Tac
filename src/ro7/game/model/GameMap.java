@@ -9,7 +9,6 @@ import java.util.Map;
 import ro7.engine.GameSpace;
 import ro7.engine.Viewport;
 import ro7.engine.util.Node;
-import ro7.game.map.ComputerUnit;
 import ro7.game.map.MapGraph;
 import ro7.game.map.TacNode;
 import cs195n.Vec2f;
@@ -18,7 +17,7 @@ import cs195n.Vec2i;
 public class GameMap extends GameSpace {
 
 	private final int SQUARE_SIZE;
-	private final int MOVE_STEPS = 20;
+	private final int MOVE_STEPS = 30;
 	private final int ALONE_REGION = 2;
 
 	private Vec2i matrixDimensions;
@@ -97,6 +96,11 @@ public class GameMap extends GameSpace {
 		return matrixDimensions.y;
 	}
 
+	/**
+	 * If the clicked position is a player unit, select it.
+	 * If it is a terrain, move the selected unit to there.
+	 * @param gamePosition clicked position
+	 */
 	public void clicked(Vec2f gamePosition) {
 		Vec2i mapPosition = new Vec2i((int) (gamePosition.x / SQUARE_SIZE),
 				(int) (gamePosition.y / SQUARE_SIZE));
@@ -115,6 +119,10 @@ public class GameMap extends GameSpace {
 		}
 	}
 
+	/**
+	 * If the clicked position is a computer unit, attack it
+	 * @param gamePosition clicked position
+	 */
 	public void rightClicked(Vec2f gamePosition) {
 		Vec2i mapPosition = new Vec2i((int) (gamePosition.x / SQUARE_SIZE),
 				(int) (gamePosition.y / SQUARE_SIZE));
@@ -129,6 +137,13 @@ public class GameMap extends GameSpace {
 		}
 	}
 
+	/**
+	 * Get shortest path from unit to map position
+	 * @param unit unit to move
+	 * @param mapPosition destination map position
+	 * @return list of nodes with shortest path, or null
+	 * if the path does not exist
+	 */
 	private List<Node> getPathTo(Unit unit, Vec2i mapPosition) {
 		Vec2i oldPosition = unit.getMapPosition();
 
@@ -160,6 +175,13 @@ public class GameMap extends GameSpace {
 				* SQUARE_SIZE);
 	}
 
+	/**
+	 * Interpolate two points on the map and add to the current path
+	 * @param previousPoint first point to be interpolated
+	 * @param currentPoint second point to be interpolated
+	 * @param path current path
+	 * @return the new path with the interpolation
+	 */
 	private List<Vec2f> interpolate(Vec2f previousPoint, Vec2f currentPoint,
 			List<Vec2f> path) {
 		for (int i = 1; i <= MOVE_STEPS; i++) {
@@ -183,9 +205,15 @@ public class GameMap extends GameSpace {
 	}
 
 	private boolean isComputerUnit(Vec2i mapPosition) {
-		return !isPlayerUnit(mapPosition);
+		return isUnit(mapPosition) && !isPlayerUnit(mapPosition);
 	}
 
+	/**
+	 * Move unit to position
+	 * @param unit unit to be moved
+	 * @param position position to be moved
+	 * @return true if it was able to move, false otherwise
+	 */
 	public boolean moveUnit(Unit unit, Vec2f position) {
 		Vec2i oldMapPosition = unit.getMapPosition();
 		Vec2i nextMapPosition = unit.getTargetMapPosition(position);
@@ -207,6 +235,9 @@ public class GameMap extends GameSpace {
 		return true;
 	}
 
+	/**
+	 * Move all units to their next position on their paths
+	 */
 	public void moveUnits() {
 		List<Unit> toRemove = new ArrayList<Unit>();
 
@@ -226,10 +257,6 @@ public class GameMap extends GameSpace {
 		}
 	}
 
-	public void stopMoving(Unit unit) {
-		moving.remove(unit);
-	}
-
 	public Unit getClosestAlly(Unit unit) {
 		float minDistance = Float.MAX_VALUE;
 		Unit closest = null;
@@ -247,6 +274,11 @@ public class GameMap extends GameSpace {
 		return closest;
 	}
 
+	/**
+	 * Get closest alone enemy
+	 * @param unit unit looking for the enemy
+	 * @return closest alone enemy to unit, or null if there is no one
+	 */
 	public Unit getAloneEnemy(Unit unit) {
 		float minDistance = Float.MAX_VALUE;
 		Unit closest = null;
@@ -281,6 +313,12 @@ public class GameMap extends GameSpace {
 		return true;
 	}
 
+	/**
+	 * Try to move next to another unit
+	 * @param unit unit to move
+	 * @param mapPosition map position of the target unit
+	 * @return true if it is possible to move, false otherwise
+	 */
 	public boolean moveToUnit(Unit unit, Vec2i mapPosition) {
 		List<Node> path = null;
 
@@ -336,6 +374,10 @@ public class GameMap extends GameSpace {
 		return closest;
 	}
 
+	/**
+	 * Update AI, and units animations
+	 * @param nanoseconds
+	 */
 	public void update(long nanoseconds) {
 		for (Unit unit : units.values()) {
 			if (unit.isComputer()) {
@@ -352,6 +394,9 @@ public class GameMap extends GameSpace {
 		}
 	}
 
+	/**
+	 * Look for dead units and remove them from the game
+	 */
 	public void checkAliveUnits() {
 		List<Vec2i> deadUnits = new ArrayList<Vec2i>();
 
@@ -361,6 +406,7 @@ public class GameMap extends GameSpace {
 			if (!unit.isAlive()) {
 				mapGraph.addNode(mapPosition);
 				moving.remove(unit);
+				attacking.remove(unit);
 				if (selected != null && selected.equals(unit)) {
 					selected = null;
 				}
@@ -391,6 +437,10 @@ public class GameMap extends GameSpace {
 		return true;
 	}
 
+	/**
+	 * Make the attacking units do their action if are next to their
+	 * target
+	 */
 	public void attackUnits() {
 		for (Map.Entry<Unit, Unit> entryUnits : attacking.entrySet()) {
 			Unit attacker = entryUnits.getKey();
@@ -398,10 +448,12 @@ public class GameMap extends GameSpace {
 
 			if (attacker.nextTo(target)) {
 				attacker.attack(target);
-				target.attacked();
+				target.attacked(attacker);
 				if (!target.isAlive()) {
 					attacker.stopAttack();
 				}
+			} else {
+				attacker.stopAttack();
 			}
 		}
 	}

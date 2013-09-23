@@ -32,12 +32,19 @@ public class Application extends SwingFrontEnd {
 		screens = new ArrayList<Screen>();
 	}
 
+	/**
+	 * Add a new screen to the application
+	 * @param screen screen to be added
+	 */
 	public void pushScreen(Screen screen) {
 		screens.add(0, screen);
 		topScreen = screen;
 		topScreen.onResize(windowSize);
 	}
 
+	/**
+	 * Remove the current screen from the application
+	 */
 	public void popScreen() {
 		if (!screens.isEmpty()) {
 			screens.remove(0);

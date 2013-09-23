@@ -8,6 +8,11 @@ import java.util.List;
 
 public class Sequence extends Composite {
 
+	/* (non-Javadoc)
+	 * @see ro7.engine.ai.Composite#update(float)
+	 * Update the children until one of them fail.
+	 * Returns SUCCESS only if all children succeed.
+	 */
 	@Override
 	public Status update(float nanoseconds) {
 		List<BTNode> subList = children;

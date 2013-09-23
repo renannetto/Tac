@@ -12,6 +12,10 @@ public abstract class Sprite {
 		this.position = position;
 	}
 	
+	/**
+	 * Draw sprite using Graphics object
+	 * @param g Graphics object used to draw
+	 */
 	public abstract void draw(Graphics2D g);
 
 }

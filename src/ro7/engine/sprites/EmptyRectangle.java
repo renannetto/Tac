@@ -8,6 +8,10 @@ import java.awt.geom.Rectangle2D;
 
 import cs195n.Vec2f;
 
+/**
+ * @author ro7
+ * Sprite that represents a transparent rectangle
+ */
 public class EmptyRectangle extends Sprite {
 	
 	private Vec2f dimensions;

@@ -1,4 +1,4 @@
-package ro7.game.map;
+package ro7.game.model;
 
 import static ro7.engine.ai.Status.FAILURE;
 import static ro7.engine.ai.Status.RUNNING;
@@ -8,12 +8,12 @@ import ro7.engine.ai.Composite;
 import ro7.engine.ai.Selector;
 import ro7.engine.ai.Sequence;
 import ro7.engine.ai.Status;
-import ro7.game.model.GameMap;
-import ro7.game.model.Unit;
 import ro7.game.sprites.UnitSprite;
 import cs195n.Vec2f;
 
 public class ComputerUnit extends Unit {
+	
+	protected final float ATTACK_DAMAGE = 0.5f;
 
 	private Composite root;
 	private Unit target;
@@ -64,7 +64,15 @@ public class ComputerUnit extends Unit {
 			root.update(nanoseconds);
 		}
 	}
+	
+	protected float getAttackDamage() {
+		return ATTACK_DAMAGE;
+	}
 
+	/**
+	 * @author ro7
+	 * Check if the unit is below 50% health
+	 */
 	public class HealthNode implements BTNode {
 
 		@Override
@@ -83,6 +91,10 @@ public class ComputerUnit extends Unit {
 
 	}
 
+	/**
+	 * @author ro7
+	 * Check if the unit is alone
+	 */
 	public class AloneNode implements BTNode {
 
 		private GameMap map;
@@ -107,6 +119,10 @@ public class ComputerUnit extends Unit {
 
 	}
 
+	/**
+	 * @author ro7
+	 * Try to move closer to an ally
+	 */
 	public class RegroupNode implements BTNode {
 
 		private GameMap map;
@@ -143,11 +159,15 @@ public class ComputerUnit extends Unit {
 
 		@Override
 		public void reset() {
-			// map.stopMoving(ComputerUnit.this);
+			
 		}
 
 	}
 
+	/**
+	 * @author ro7
+	 * Look for the closest alone enemy
+	 */
 	public class AloneEnemyNode implements BTNode {
 
 		private GameMap map;
@@ -175,19 +195,25 @@ public class ComputerUnit extends Unit {
 
 	}
 
+	/**
+	 * @author ro7
+	 * Attack closest alone enemy
+	 */
 	public class AttackAloneNode implements BTNode {
 
 		private GameMap map;
 		private Status status;
+		private Vec2f oldPosition;
 
 		public AttackAloneNode(GameMap map) {
 			this.map = map;
 			this.status = FAILURE;
+			this.oldPosition = ComputerUnit.this.position;
 		}
 
 		@Override
 		public Status update(float nanoseconds) {
-			if (ComputerUnit.this.nextTo(target)) {
+			if (target.isAlive() && ComputerUnit.this.nextTo(target)) {
 				map.attack(ComputerUnit.this, target);
 				status = SUCCESS;
 				return SUCCESS;
@@ -203,25 +229,35 @@ public class ComputerUnit extends Unit {
 					status = FAILURE;
 					return FAILURE;
 				}
+			} else if (oldPosition.equals(ComputerUnit.this.position)) {
+				status = FAILURE;
+				return FAILURE;
 			}
+			oldPosition = ComputerUnit.this.position;
 			return status;
 		}
 
 		@Override
 		public void reset() {
-			// map.stopMoving(ComputerUnit.this);
+			
 		}
 
 	}
 
+	/**
+	 * @author ro7
+	 * Attack closest enemy
+	 */
 	public class AttackAnyNode implements BTNode {
 
 		private GameMap map;
 		private Status status;
+		private Vec2f oldPosition;
 
 		public AttackAnyNode(GameMap map) {
 			this.map = map;
 			this.status = FAILURE;
+			this.oldPosition = ComputerUnit.this.position;
 		}
 
 		@Override
@@ -246,13 +282,17 @@ public class ComputerUnit extends Unit {
 					status = FAILURE;
 					return FAILURE;
 				}
+			} else if (oldPosition.equals(ComputerUnit.this.position)) {
+				status = FAILURE;
+				return FAILURE;
 			}
+			oldPosition = ComputerUnit.this.position;
 			return status;
 		}
 
 		@Override
 		public void reset() {
-			// map.stopMoving(ComputerUnit.this);
+			
 		}
 
 	}

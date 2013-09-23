@@ -8,6 +8,10 @@ import java.awt.geom.Rectangle2D;
 
 import cs195n.Vec2f;
 
+/**
+ * @author ro7
+ * Sprite that represents a colored rectangle
+ */
 public class FilledRectangle extends Sprite {
 	
 	private Vec2f dimensions;

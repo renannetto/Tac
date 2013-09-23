@@ -14,6 +14,13 @@ public abstract class GameSpace {
 		this.dimensions = dimensions;
 	}
 
+	/**
+	 * Draw the gamespace inside the viewport
+	 * @param g Graphics object used to draw
+	 * @param min minimum game coordinate that will appear on the viewport
+	 * @param max maximum game coordinate that will appear on the viewport
+	 * @param viewport the current viewport
+	 */
 	public abstract void draw(Graphics2D g, Vec2f min, Vec2f max, Viewport viewport);
 
 	public Vec2f getDimensions() {

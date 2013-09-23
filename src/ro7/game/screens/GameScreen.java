@@ -38,33 +38,25 @@ public class GameScreen extends Screen {
 
 	@Override
 	public void onTick(long nanosSincePreviousTick) {
-		try {
-			if (map != null) {
-				map.moveUnits();
-				map.attackUnits();
-				map.update(nanosSincePreviousTick);
-				map.checkAliveUnits();
-			}
-		} catch (Exception exception) {
-			exception.printStackTrace();
+		if (map != null) {
+			map.moveUnits();
+			map.attackUnits();
+			map.update(nanosSincePreviousTick);
+			map.checkAliveUnits();
 		}
 	}
 
 	@Override
 	public void onDraw(Graphics2D g) {
-		try {
-			if (map != null) {
-				viewport.draw(g);
-				if (map.win()) {
-					win.draw(g);
-				} else if (map.lose()) {
-					lose.draw(g);
-				}
-			} else {
-				warning.draw(g);
+		if (map != null) {
+			viewport.draw(g);
+			if (map.win()) {
+				win.draw(g);
+			} else if (map.lose()) {
+				lose.draw(g);
 			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
+		} else {
+			warning.draw(g);
 		}
 	}
 
@@ -108,7 +100,7 @@ public class GameScreen extends Screen {
 	}
 
 	@Override
-	public void onMousePressed(MouseEvent e) {		
+	public void onMousePressed(MouseEvent e) {
 		Point point = e.getPoint();
 
 		Vec2f gamePosition = viewport.screenToGame(new Vec2f(point.x, point.y));
