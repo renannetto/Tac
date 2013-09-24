@@ -18,7 +18,7 @@ import cs195n.Vec2i;
 public class UnitSprite extends AnimatedSprite {
 
 	private final int TIME_TO_MOVE = 300;
-	private final Vec2f HEALTH_BAR_DIMENSIONS = new Vec2f(32, 5);
+	private final Vec2f HEALTH_BAR_DIMENSIONS = new Vec2f(20.0f, 2.0f);
 
 	private Vec2f dimensions;
 	private boolean selected;
