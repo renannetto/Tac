@@ -3,8 +3,10 @@ package ro7.game.model;
 import static ro7.engine.ai.Status.FAILURE;
 import static ro7.engine.ai.Status.RUNNING;
 import static ro7.engine.ai.Status.SUCCESS;
+import ro7.engine.ai.Action;
 import ro7.engine.ai.BTNode;
 import ro7.engine.ai.Composite;
+import ro7.engine.ai.Condition;
 import ro7.engine.ai.Selector;
 import ro7.engine.ai.Sequence;
 import ro7.engine.ai.Status;
@@ -73,20 +75,17 @@ public class ComputerUnit extends Unit {
 	 * @author ro7
 	 * Check if the unit is below 50% health
 	 */
-	public class HealthNode implements BTNode {
+	public class HealthNode extends Condition {
 
 		@Override
-		public Status update(float nanoseconds) {
-			if (lifepoints < 50) {
-				return SUCCESS;
-			}
-			return FAILURE;
+		public boolean checkCondition(float nanoseconds) {
+			return lifepoints < 50;
 		}
 
 		@Override
 		public void reset() {
 			// TODO Auto-generated method stub
-
+			
 		}
 
 	}
@@ -95,7 +94,7 @@ public class ComputerUnit extends Unit {
 	 * @author ro7
 	 * Check if the unit is alone
 	 */
-	public class AloneNode implements BTNode {
+	public class AloneNode extends Condition {
 
 		private GameMap map;
 
@@ -104,17 +103,14 @@ public class ComputerUnit extends Unit {
 		}
 
 		@Override
-		public Status update(float nanoseconds) {
-			if (map.isAlone(ComputerUnit.this)) {
-				return SUCCESS;
-			}
-			return FAILURE;
-		}
-
-		@Override
 		public void reset() {
 			// TODO Auto-generated method stub
 
+		}
+
+		@Override
+		public boolean checkCondition(float nanoseconds) {
+			return map.isAlone(ComputerUnit.this);
 		}
 
 	}
@@ -123,7 +119,7 @@ public class ComputerUnit extends Unit {
 	 * @author ro7
 	 * Try to move closer to an ally
 	 */
-	public class RegroupNode implements BTNode {
+	public class RegroupNode extends Action {
 
 		private GameMap map;
 		private Status status;
@@ -134,7 +130,7 @@ public class ComputerUnit extends Unit {
 		}
 
 		@Override
-		public Status update(float nanoseconds) {
+		public Status act(float nanoseconds) {
 			Unit ally = map.getClosestAlly(ComputerUnit.this);
 
 			if (ally == null) {
@@ -168,7 +164,7 @@ public class ComputerUnit extends Unit {
 	 * @author ro7
 	 * Look for the closest alone enemy
 	 */
-	public class AloneEnemyNode implements BTNode {
+	public class AloneEnemyNode extends Action {
 
 		private GameMap map;
 
@@ -177,7 +173,7 @@ public class ComputerUnit extends Unit {
 		}
 
 		@Override
-		public Status update(float nanoseconds) {
+		public Status act(float nanoseconds) {
 			Unit enemy = map.getAloneEnemy(ComputerUnit.this);
 
 			if (enemy == null) {
@@ -199,7 +195,7 @@ public class ComputerUnit extends Unit {
 	 * @author ro7
 	 * Attack closest alone enemy
 	 */
-	public class AttackAloneNode implements BTNode {
+	public class AttackAloneNode extends Action {
 
 		private GameMap map;
 		private Status status;
@@ -212,7 +208,7 @@ public class ComputerUnit extends Unit {
 		}
 
 		@Override
-		public Status update(float nanoseconds) {
+		public Status act(float nanoseconds) {
 			if (target.isAlive() && ComputerUnit.this.nextTo(target)) {
 				map.attack(ComputerUnit.this, target);
 				status = SUCCESS;
@@ -248,7 +244,7 @@ public class ComputerUnit extends Unit {
 	 * @author ro7
 	 * Attack closest enemy
 	 */
-	public class AttackAnyNode implements BTNode {
+	public class AttackAnyNode extends Action {
 
 		private GameMap map;
 		private Status status;
@@ -261,7 +257,7 @@ public class ComputerUnit extends Unit {
 		}
 
 		@Override
-		public Status update(float nanoseconds) {
+		public Status act(float nanoseconds) {
 			Unit enemy = map.getClosestEnemy(ComputerUnit.this);
 			if (enemy == null) {
 				status = FAILURE;
