@@ -4,7 +4,7 @@ How to verify engine requirements:
  - Sprite-sheet images: the ro7.engine.sprites package contains a SpriteSheet class, which contains a sheet image and is able to draw only a part with it, using the information about the padding and the frame size.
  - Shared images: the class ImageSprite in the same package corresponds to an individual sprite. This sprite will have a reference to the sprite sheet, so it is possible to use the same sprite sheet reference with many sprites.
  - Animations: the AnimatedSprite is a subclass of ImageSprite which has a method to update its frame on the animation. The user can extend this class and implement the updateSheetPosition method to update the position of the sprite on the sheet based on the current animation frame.
- - Behavior trees: all the classes of the Behavior Tree are on ro7.engine.ai. Those classes are: BTNode (interface), Composite (abstract class), Selector and Sequence. This way, the user can use Selector and Sequences, and create leaf nodes that implement the BTNode interface and execute an action or test a condition.
+ - Behavior trees: all the classes of the Behavior Tree are on ro7.engine.ai. Those classes are: BTNode (interface), Composite (abstract class), Selector, Sequence, Action and Condition. This way, the user can use Selector and Sequences, and create leaf nodes that extend Action and Condition.
 
 Map format:
  - The map format used was almost the same used for Tac I, but with the following changes:
